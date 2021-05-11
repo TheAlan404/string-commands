@@ -3,6 +3,7 @@
 /**
  * @typedef {Object} HandlerOptions
  * @property {string} prefix The prefix for the handler.
+ * @property {Boolean} dontLog A boolean that controls whether to log warns or not. Defaults to false.
  */
 
 /**

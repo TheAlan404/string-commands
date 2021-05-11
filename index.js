@@ -5,7 +5,6 @@
  * @property {string} prefix The prefix for the handler.
  */
 
-
 /**
 * A command argument. The first character of the string represents if it is required or not.
 * ':' means required and ';' means optional.
@@ -38,21 +37,25 @@
 * @param {...any} extraArgs
 */
 
+/**
+ * @typedef {Object} CommandOptions
+ * @property {string} name The name of the command
+ * @property {string[]|string} aliases aliases of this command (must be string[] if an object)
+ * @property {CommandArgument[]|string[]} usage shows the usage for this command
+ * @property {commandCallback} run
+ */
+
 class Command {
   /**
   * Represents a Command object
   * You do not need to initialize this class to make CommandHandler#addCommand work,
   * you can just use a normal object with the properties.
   * @constructor
-  * @param {object} data
-  * @param {string} data.name - name of the command
-  * @param {(string[]|string)} [data.aliases] - aliases of this command (must be string[] if an object)
-  * @param {(CommandArgument[]|string[]) [data.usage] - shows the usage for this command
-  * @param {commandCallback} data.run
+  * @param {CommandOptions} data
   */
   constructor(data) {
-    this.name = data.name || "ping";
-    this.aliases = data.aliases ? (Array.isArray(data.aliases) ? data.aliases : [data.aliases] ) : [];
+    this.name = typeof data.name === 'string' && data.name ? data.name : "ping";
+    this.aliases = data.aliases ? (Array.isArray(data.aliases) && data.aliases.length > 1 ? data.aliases : [data.aliases] ) : [];
     this.usage = Array.isArray(data.usage) ? data.usage : [];
     this.run = data.run;
     this.isAlias = data.isAlias === undefined ? false : data.isAlias;
@@ -87,40 +90,44 @@ class CommandHandler {
   */
   setDefaultArgs(...list) {
     this.defaultArgs = list;
+    return this;
   }
 
   /**
   * Sets the function that is run when the command isnt found.
   * @param {UnknownCommandCallback} func
   */
-  setUnknownCommand(func){
+  setUnknownCommand(func) {
     this.unknownCommand = func;
+    return this;
   }
 
   /**
   * Sets the function that is run when required args arent given
   * @param {incorrectUsageCallback} func
   */
-  setIncorrectUsage(func){
+  setIncorrectUsage(func) {
     this.incorrectUsage = func;
+    return this;
   }
 
   /**
   * Adds a command
-  * @param {Command} command
+  * @param {Command|Object} command
   */
   addCommand(command = {}) {
-    if(!command.name || !command.run) throw new Error("Command must have a name and a run function!");
-    if(this.commands.has(command.name) && !this.dontLog) console.warn(`[string-commands] Command ${command.name} has already been added! Overwriting.`);
+    if (!command.name || !command.run) throw new Error("Command must have a name and a run function!");
+    if (this.commands.has(command.name) && !this.dontLog) console.warn(`[string-commands] Command ${command.name} has already been added! Overwriting.`);
     this.commands.set(command.name, command);
     
-    if(Array.isArray(command.aliases)) command.aliases.forEach((alias) => {
-      if(this.commands.has(alias) && !this.dontLog) console.warn(`[string-commands] Command ${alias} has already been added! Overwriting. (alias of ${command.name})`);
-      this.commands.set(alias, {
-        ...command,
-        isAlias: true,
-      })
-    })
+    if (Array.isArray(command.aliases))
+      for (const alias of (command.aliases || [])) {
+        if (this.commands.has(alias) && !this.dontLog) console.warn(`[string-commands] Command ${alias} has already been added! Overwriting. (alias of ${command.name})`);
+        this.commands.set(alias, {
+          ...command,
+          isAlias: true,
+        });
+      }
   }
   
   /**
@@ -130,39 +137,39 @@ class CommandHandler {
   *                             it will look for the defaultArgs list (UNIMPLEMENTED).
   */
   run(string, ...extraArgs) {
-    if(this.prefix.length && !string.startsWith(this.prefix)) return;
-    if(this.prefix.length) string = string.slice(this.prefix.length);
-    let args = string.split(" ");
-    let commandName = args.shift().toLowerCase();
-    if(!this.commands.has(commandName)) {
-      if(this.unknownCommand) this.unknownCommand(commandName, string, ...extraArgs);
+    if (!string.startsWith(this.prefix)) return;
+    string = string.slice(this.prefix.length);
+    
+    const args = string.split(" ");
+    const commandName = args.shift().toLowerCase();
+    if (!this.commands.has(commandName)) {
+      if (this.unknownCommand) this.unknownCommand(commandName, string, ...extraArgs);
       return;
-    };
+    }
     let command = this.commands.get(commandName);
     // TODO: add middleware (for ex. check perms for a discord bot)
 
-    if(Array.isArray(command.usage) && command.usage.length) {
+    if (Array.isArray(command.usage) && command.usage.length) {
       const req = c.usage.filter(u => u.startsWith(':')).length;
-      if (req > 0 && !args[req - 1]) {
-        if(this.incorrectUsage) this.incorrectUsage(commandName, string, ...extraArgs);
-      }
+      if (req > 0 && !args[req - 1] && this.incorrectUsage)
+        this.incorrectUsage(commandName, string, ...extraArgs);
     }
 
     let callbackOutput;
     try {
       callbackOutput = command.run(args, ...extraArgs);
     } catch (e) {
-      if(this.surpressErrors) return;
-      if(this.errorHandler) this.errorHandler(e);
+      if (this.surpressErrors) return;
+      if (this.errorHandler) this.errorHandler(e);
       else throw e;
-    };
-    if(callbackOutput instanceof Promise) {
+    }
+    if (callbackOutput instanceof Promise) {
       callbackOutput.catch(e => {
-        if(this.surpressErrors) return;
-        if(this.errorHandler) this.errorHandler(e);
+        if (this.surpressErrors) return;
+        if (this.errorHandler) this.errorHandler(e);
         else throw e;
       });
-    };
+    }
   }
 }
 

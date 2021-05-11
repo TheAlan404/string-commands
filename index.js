@@ -21,6 +21,7 @@ module.exports = class CommandHandler {
   * @param {string} prefix The new prefix.
   */
   setPrefix(prefix) {
-    this.prefix = typeof prefix == "string" ? prefix : "";
+    this.prefix = typeof prefix === "string" ? prefix : "";
+	return this;
   }
 }

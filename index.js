@@ -38,6 +38,7 @@ class Command {
     this.aliases = data.aliases ? (Array.isArray(data.aliases) ? data.aliases : [data.aliases] ) : [];
     this.usage = Array.isArray(data.usage) ? data.usage : [];
     this.run = data.run;
+    this.isAlias = data.isAlias === undefined ? false : data.isAlias;
   }
 }
 
@@ -51,6 +52,7 @@ module.exports = class CommandHandler {
   constructor(opts = {}) {
     this.prefix = typeof opts.prefix === 'string' ? opts.prefix : "";
     this.commands = new Map();
+    this.dontLog = opts.dontLog;
   }
   
   /**
@@ -60,5 +62,23 @@ module.exports = class CommandHandler {
   setPrefix(prefix) {
     this.prefix = typeof prefix === "string" ? prefix : "";
     return this;
+  }
+
+  /**
+  * Adds a command
+  * @param {Command} command
+  */
+  addCommand(command = {}) {
+    if(!command.name || !command.run) throw new Error("Command must have a name and a run function!");
+    if(this.commands.has(command.name) && !this.dontLog) console.warn(`[string-commands] Command ${command.name} has already been added! Overwriting.`);
+    this.commands.set(command.name, command);
+    
+    if(Array.isArray(command.aliases)) command.aliases.forEach((alias) => {
+      if(this.commands.has(alias) && !this.dontLog) console.warn(`[string-commands] Command ${alias} has already been added! Overwriting. (alias of ${command.name})`);
+      this.commands.set(alias, {
+        ...command,
+        isAlias: true,
+      })
+    })
   }
 }

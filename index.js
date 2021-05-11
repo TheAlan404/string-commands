@@ -101,7 +101,7 @@ class CommandHandler {
   * Sets the function that is run when required args arent given
   * @param {incorrectUsageCallback} func
   */
-  setUnknownCommand(func){
+  setIncorrectUsage(func){
     this.incorrectUsage = func;
   }
 

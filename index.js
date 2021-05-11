@@ -128,6 +128,7 @@ class CommandHandler {
   * @param {string} string
   * @param {...any} extraArgs - if the handler sees null or undefined,
   *                             it will look for the defaultArgs list (UNIMPLEMENTED).
+  */
   run(string, ...extraArgs) {
     if(this.prefix.length && !string.startsWith(this.prefix)) return;
     if(this.prefix.length) string = string.slice(this.prefix.length);

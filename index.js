@@ -22,6 +22,6 @@ module.exports = class CommandHandler {
   */
   setPrefix(prefix) {
     this.prefix = typeof prefix === "string" ? prefix : "";
-	return this;
+    return this;
   }
 }

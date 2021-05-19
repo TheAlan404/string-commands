@@ -314,4 +314,6 @@ module.exports = {
 	CommandHandler,
 	Command,
 	setConsolePrefix,
+	
+	DiscordCommandHandler,
 }

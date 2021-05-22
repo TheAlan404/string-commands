@@ -39,6 +39,7 @@ let PREFIX = "string-commands";
 * The function run when the required args arent given.
 * @callback incorrectUsageCallback
 * @param {string} commandName
+* @param {string} usage
 * @param {string} fullString
 * @param {...any} extraArgs
 */
@@ -60,8 +61,12 @@ class Command {
 	* you can just use a normal object with the properties.
 	* @constructor
 	* @param {CommandOptions} data
+	* Or you can use the same params as Command.from
 	*/
-	constructor(data) {
+	constructor(data, ...extra) {
+		
+		if(extra.length || typeof data != "object") return Command.from(data, ...extra);
+		
 		this.name = typeof data.name === 'string' && data.name ? data.name : "ping";
 		this.aliases = data.aliases ? (Array.isArray(data.aliases) && data.aliases.length > 1 ? data.aliases : [data.aliases] ) : [];
 		this.usage = Array.isArray(data.usage) ? data.usage : [];
@@ -72,6 +77,22 @@ class Command {
 	
 	get description(){
 		return this.desc;
+	};
+	
+	/**
+	* Shorthand for making commands
+	* @param {string} name
+	* @param {string|string[]} aliases - if a string, seperate using spaces
+	* @param {string[]} usage
+	* @param {commandCallback} run
+	*/
+	static from(name, aliases, usage, run){
+		return new Command({
+			name,
+			aliases: (typeof aliases == "string" ? aliases.split(" ") : aliases),
+			usage,
+			run,
+		});
 	};
 }
 
@@ -192,9 +213,10 @@ class CommandHandler {
 		// TODO: add middleware (for ex. check perms for a discord bot)
 
 		if (Array.isArray(command.usage) && command.usage.length) {
-			const req = c.usage.filter(u => u.startsWith(':')).length;
-			if (req > 0 && !args[req - 1] && this.incorrectUsage) {
-				this.incorrectUsage(commandName, string, ...extraArgs);
+			const req = command.usage.filter(u => u.startsWith(':')).length;
+			if (req > 0 && !args[req - 1]) {
+				if(this.incorrectUsage) this.incorrectUsage(commandName, parseArguments(command.usage), ...extraArgs);
+				return;
 			};
 		}
 
@@ -299,6 +321,19 @@ class DiscordCommandHandler extends CommandHandler {
 };
 
 
+
+function formatArguments(str){
+	if(str.startsWith(":")) {
+		return "<"+str.replace(":", "")+">";
+	} else {
+		return "["+str.replace(";", "")+"]";
+	};
+};
+
+
+function parseArguments(array){
+	return array.map(formatArguments).join(" ");
+};
 
 
 

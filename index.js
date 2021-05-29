@@ -1,5 +1,5 @@
 // String Commands
-const fs = require("fs");
+const { readdirSync } = require('fs');
 const { basename, join } = require("path");
 
 /** The prefix used in console. Change using setConsolePrefix */
@@ -64,10 +64,9 @@ class Command {
 	* Or you can use the same params as Command.from
 	*/
 	constructor(data, ...extra) {
+		if (extra.length || typeof data !== "object") return Command.from(data, ...extra);
 		
-		if(extra.length || typeof data != "object") return Command.from(data, ...extra);
-		
-		this.name = typeof data.name === 'string' && data.name ? data.name : "ping";
+		this.name = typeof data.name === 'string' && data.name.length ? data.name : "ping";
 		this.aliases = data.aliases ? (Array.isArray(data.aliases) && data.aliases.length > 1 ? data.aliases : [data.aliases] ) : [];
 		this.usage = Array.isArray(data.usage) ? data.usage : [];
 		this.desc = data.desc || data.description || "";
@@ -75,9 +74,9 @@ class Command {
 		this.isAlias = data.isAlias === undefined ? false : data.isAlias;
 	}
 	
-	get description(){
+	get description() {
 		return this.desc;
-	};
+	}
 	
 	/**
 	* Shorthand for making commands
@@ -86,14 +85,14 @@ class Command {
 	* @param {string[]} usage
 	* @param {commandCallback} run
 	*/
-	static from(name, aliases, usage, run){
+	static from(name, aliases, usage, run) {
 		return new Command({
 			name,
-			aliases: (typeof aliases == "string" ? aliases.split(" ") : aliases),
+			aliases: (typeof aliases === "string" ? aliases.split(" ") : aliases),
 			usage,
 			run,
 		});
-	};
+	}
 }
 
 
@@ -104,22 +103,22 @@ class CommandHandler {
 	* @param {HandlerOptions} opts
 	*/
 	constructor(opts = {}) {
-		this.prefix = typeof opts.prefix === 'string' ? opts.prefix : "";
+		this.setPrefix(opts.prefix);
 		this.commands = new Map();
-		this.dontLog = opts.dontLog;
+		this.dontLog = !!opts.dontLog;
 	}
 	
 	/**
 	* List all of the commands.
 	* @return {string[]} names of the commands
 	*/
-	listAll(){
-		return Array.from(this.commands.keys()).filter(name => !this.commands.get(name).isAlias);
-	};
+	listAll() {
+		return [...this.commands.keys()].filter(name => !this.commands.get(name).isAlias);
+	}
 	
 	/**
 	* Sets the prefix for this handler
-	* @param {string} prefix The new prefix.
+	* @param {string} [prefix] The new prefix.
 	*/
 	setPrefix(prefix) {
 		this.prefix = typeof prefix === "string" ? prefix : "";
@@ -140,6 +139,7 @@ class CommandHandler {
 	* @param {UnknownCommandCallback} func
 	*/
 	setUnknownCommand(func) {
+		if (!func || typeof func !== 'function') throw new TypeError("'UnknownCommandCallback' must be a function.");
 		this.unknownCommand = func;
 		return this;
 	}
@@ -149,6 +149,7 @@ class CommandHandler {
 	* @param {incorrectUsageCallback} func
 	*/
 	setIncorrectUsage(func) {
+		if (!func || typeof func !== 'function') throw new TypeError("'incorrectUsageCallback' must be a function.");
 		this.incorrectUsage = func;
 		return this;
 	}
@@ -169,29 +170,29 @@ class CommandHandler {
 					...command,
 					isAlias: true,
 				});
-			};
-		};
-	};
-  
+			}
+		}
+	}
+
 	/**
 	* Loads a file and adds the commands in it
 	* @param {string} - path
 	* @param {...any} - extraArgs
 	*/
-	loadFile(path="", ...extraArgs){
+	loadFile(path="", ...extraArgs) {
 		let filename = basename(path, ".js");
 		try {
 			let mod = require(path);
-			if(!mod.load) {
-				if(!this.dontLog) console.warn(`[${PREFIX}] Cannot load file '${filename}' because exports.load is not defined`);
+			if (!mod.load) {
+				if (!this.dontLog) console.warn(`[${PREFIX}] Cannot load file '${filename}' because exports.load is not defined`);
 				return;
-			};
+			}
 			mod.load(this.addCommand, ...extraArgs);
 		} catch(e) {
 			console.log(`[${PREFIX}] An error occured while loading command '${filename}':\n`, e);
-		};
-		if(this.log && this.log.commandLoaded) console.log(`[string-commands] Loaded command '${filename}'`);
-	};
+		}
+		if (this.log && this.log.commandLoaded) console.log(`[string-commands] Loaded command '${filename}'`);
+	}
   
 	/**
 	* Runs a command depending on the string
@@ -215,9 +216,9 @@ class CommandHandler {
 		if (Array.isArray(command.usage) && command.usage.length) {
 			const req = command.usage.filter(u => u.startsWith(':')).length;
 			if (req > 0 && !args[req - 1]) {
-				if(this.incorrectUsage) this.incorrectUsage(commandName, parseArguments(command.usage), ...extraArgs);
+				if (this.incorrectUsage) this.incorrectUsage(commandName, command.usage.map(x => /^:/.test(x) ? `<${x.replace(/:/g, '')}>` : `[${x.replace(/;/g, '')}]`).join(" "), ...extraArgs);
 				return;
-			};
+			}
 		}
 
 		let callbackOutput;
@@ -231,19 +232,12 @@ class CommandHandler {
 		if (callbackOutput instanceof Promise) {
 			callbackOutput.catch(e => {
 				if (this.surpressErrors) return;
-				if (this.errorHandler) this.errorHandler(e);
+				else if (this.errorHandler) this.errorHandler(e);
 				else throw e;
 			});
 		}
 	}
 }
-
-
-
-
-
-
-
 
 class DiscordCommandHandler extends CommandHandler {
 	/**
@@ -251,29 +245,28 @@ class DiscordCommandHandler extends CommandHandler {
 	* @param {HandlerOptions} opts
 	* @param {Discord.Client} opts.client - if present will call this.attach with it
 	*/
-	constructor (opts = {}){
+	constructor (opts = {}) {
 		super(opts);
-		const { Collection } = require("discord.js");
-		this.commands = new Collection();
+		this.commands = new require("discord.js").Collection();
 		
-		if(opts.client) this.attach(opts.client);
-	};
+		if (opts.client) this.attach(opts.client);
+	}
 	
 	/** Helper to run with extra argument of message */
-	run(message){
+	run(message) {
 		super.run(message.content, message, this.client, ...this.defaultArgs);
-	};
+	}
 	
 	// @see CommandHandler#listAll
-	listAll(){
+	listAll() {
 		return this.commands.keyArray().filter(name => !this.commands.get(name).isAlias);
-	};
+	}
 	
 	/**
 	* Imports a template file (known as 'altyapi' in turkish)
 	* @param {string} path - must be a full path because `require` function is relative to the package/file
 	*/
-	importTemplateFile(path=""){
+	importTemplateFile(path="") {
 		let filename = basename(path, ".js");
 		try {
 			let mod = require(path);
@@ -288,67 +281,41 @@ class DiscordCommandHandler extends CommandHandler {
 			});
 		} catch(e) {
 			console.log(`[${PREFIX}] An error occured while loading command '${filename}':\n`, e);
-		};
-		if(this.log && this.log.commandLoaded) console.log(`[${PREFIX}] Loaded command '${filename}'`);
-	};
+		}
+		if (this.log && this.log.commandLoaded) console.log(`[${PREFIX}] Loaded command '${filename}'`);
+	}
 	
 	// @see CommandHandler#loadFile
-	loadFile(path, ...extraArgs){
+	loadFile(path, ...extraArgs) {
 		super.loadFile(path, this.client, ...extraArgs);
-	};
+	}
 	
 	/**
 	* Imports commands from a directory
 	* @param {string} folderpath
 	*/
-	importTemplates(folderpath){
-		let files = fs.readdirSync(path);
+	importTemplates(folderpath) {
+		let files = readdirSync(path);
 		files.forEach((filename) => {
 			this.importTemplateFile(join(folderpath, filename));
 		});
-	};
+	}
 	
 	/**
 	* Attaches the handler to the client
 	* @param {Discord.Client} client
 	*/
-	attach(client){
+	attach(client) {
 		this.client = client;
 		client.on("message", (message) => {
 			this.run(message);
 		});
-	};
-};
-
-
-
-function formatArguments(str){
-	if(str.startsWith(":")) {
-		return "<"+str.replace(":", "")+">";
-	} else {
-		return "["+str.replace(";", "")+"]";
-	};
-};
-
-
-function parseArguments(array){
-	return array.map(formatArguments).join(" ");
-};
-
-
-
-let setConsolePrefix = (str) => PREFIX = str;
-
-
-
-
-
-
+	}
+}
 
 module.exports = {
 	CommandHandler,
 	Command,
-	setConsolePrefix,
-	
+	setConsolePrefix: (str) => PREFIX = str,	
 	DiscordCommandHandler,
 }

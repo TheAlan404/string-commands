@@ -295,10 +295,8 @@ class DiscordCommandHandler extends CommandHandler {
 	* @param {string} folderpath
 	*/
 	importTemplates(folderpath) {
-		let files = readdirSync(path);
-		files.forEach((filename) => {
+		for (const filename of readdirSync(path))
 			this.importTemplateFile(join(folderpath, filename));
-		});
 	}
 	
 	/**
@@ -307,9 +305,7 @@ class DiscordCommandHandler extends CommandHandler {
 	*/
 	attach(client) {
 		this.client = client;
-		client.on("message", (message) => {
-			this.run(message);
-		});
+		client.on("message", message => this.run(message));
 	}
 }
 

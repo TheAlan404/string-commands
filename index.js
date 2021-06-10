@@ -106,6 +106,7 @@ class CommandHandler {
 		this.setPrefix(opts.prefix);
 		this.commands = new Map();
 		this.dontLog = !!opts.dontLog;
+		this.defaultArgs = [];
 	}
 	
 	/**
@@ -247,7 +248,7 @@ class DiscordCommandHandler extends CommandHandler {
 	*/
 	constructor (opts = {}) {
 		super(opts);
-		this.commands = new require("discord.js").Collection();
+		this.commands = new (require("discord.js")).Collection();
 		
 		if (opts.client) this.attach(opts.client);
 	}

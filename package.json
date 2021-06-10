@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/thealan404/string-commands/issues"
   },
-  "homepage": "https://github.com/thealan404/string-commands#readme"
+  "homepage": "https://github.com/thealan404/string-commands#readme",
+  "dependencies": {
+    "discord.js": "^12.5.3"
+  }
 }

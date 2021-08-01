@@ -1,4 +1,4 @@
-const { CommandHandler } = require("./index.js");
+const CommandHandler = require("./CommandHandler.js");
 
 class DiscordCommandHandler extends CommandHandler {
 	/**

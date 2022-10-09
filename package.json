@@ -1,0 +1,34 @@
+{
+  "name": "string-commands",
+  "version": "1.0.0",
+  "description": "The command handler for almost anything.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    "discordjs": "./plugins/discord.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheAlan404/string-commands.git"
+  },
+  "keywords": [
+    "command",
+    "handler",
+    "parser",
+    "commands",
+    "discord.js",
+    "discord"
+  ],
+  "author": "alan404",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/TheAlan404/string-commands/issues"
+  },
+  "homepage": "https://github.com/TheAlan404/string-commands#readme",
+  "dependencies": {
+    "splitargs": "^0.0.7"
+  }
+}

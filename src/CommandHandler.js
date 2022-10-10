@@ -68,7 +68,7 @@ class CommandHandler extends EventEmitter {
         /** @type {Map<string, string>} */
         this.Aliases = new Map();
 
-        this.argumentParser = new ArgumentParser();
+        this.argumentParser = new ArgumentParser(opts.argumentParser);
     }
 
     /**
@@ -76,6 +76,7 @@ class CommandHandler extends EventEmitter {
      * @param {Command} cmd
      */
     registerCommand(cmd = {}) {
+        cmd = this.transformCommand(cmd);
         if(typeof cmd !== "object") throw new Error("registerCommand: Command must be an object");
 
         if(!cmd.name) throw new Error("registerCommand: Command does not have a name");
@@ -291,6 +292,10 @@ class CommandHandler extends EventEmitter {
      */
     prettyPrint(cmd) {
         return this.prefix + cmd.name + (cmd.args?.length ? (" " + this.argumentParser.usagesToString(cmd.args)) : "");
+    }
+
+    registerUsage(...args) {
+        this.argumentParser.registerUsage(...args);
     }
 }
 

@@ -81,6 +81,10 @@ const NativeUsages = {
 				return fail(`${ctx.style.arg(ctx.name)} must be a number!`);
 			}
 
+			if (ctx.opts.isInt && arg % 1 !== 0) {
+				return fail(`${ctx.style.arg(ctx.name)} must be a whole number!`);
+			}
+
 			if (ctx.opts.max !== undefined && arg > ctx.opts.max) {
 				return fail(`${ctx.style.arg(ctx.name)} cannot be greater than ${ctx.style.arg(ctx.opts.max)}!`);
 			}
@@ -118,6 +122,15 @@ class ArgumentParser {
 			this.styling[k] = v;
 		};
 	};
+
+	/**
+	 * Registers an usage
+	 * @param {string} id Usage Name
+	 * @param {UsageParser} usage The usage to register
+	 */
+	registerUsage(id, usage) {
+		this.ArgumentParsers.set(id, usage);
+	}
 
 	/**
 	 * Resolves an Usage Parser

@@ -1,4 +1,4 @@
-name: Run ESLint, Prettier, and Tests
+name: prettier
 on:
   push:
     branches:

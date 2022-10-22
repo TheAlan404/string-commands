@@ -54,9 +54,9 @@ const fail = (m) => ({ fail: true, message: m });
 
 /**
  * A collection of native/hardcoded argument parsers
- * @type {Object<string, UsageParser>}
+ * @type {[string, UsageParser][]}
  */
-const NativeUsages = {
+const NativeUsages = Object.entries({
 	text: {
 		type: 'native',
 		async parse(ctx) {
@@ -96,7 +96,7 @@ const NativeUsages = {
 			return { parsed: arg };
 		}
 	},
-};
+});
 
 /**
  * The stylings object for ArgumentHandler.
@@ -112,17 +112,10 @@ const defaultStylings = {
 
 class ArgumentParser {
 	constructor(opts = {}) {
-		this.ArgumentParsers = new Map();
-		for(let [k, v] of Object.entries(NativeUsages)) {
-			this.ArgumentParsers.set(k, v);
-		};
-
-        this.styling = defaultStylings;
-        for(let [k, v] of Object.entries(opts.styling || {})) {
-			this.styling[k] = v;
-		};
-	};
-
+		this.ArgumentParsers = new Map(NativeUsages);
+        	this.styling = Object.assign(defaultStylings, opts.styling || {});
+	}
+	
 	/**
 	 * Registers an usage
 	 * @param {string} id Usage Name
@@ -176,7 +169,7 @@ class ArgumentParser {
 	 * @returns {string}
 	 */
 	usagesToString(usages = []) {
-		return usages.map(u => this.usageToString(u)).join(" ");
+		return usages.map(this.usageToString).join(" ");
 	}
 
 	/**
@@ -188,7 +181,7 @@ class ArgumentParser {
 		usage = this.resolveUsageParser(usage);
 
 		let braceOpen = usage.optional ? "[" : "<";
-		let braceClose = usage.optional ? "]" : ">";
+		let braceClose = braceOpen;
 
 		let usageTypeName = usage.desc;
 
@@ -203,7 +196,7 @@ class ArgumentParser {
 	async parseUsages(text = "", _usages = []) {
 		let rawArgs = splitargs(text);
 
-		let usages = _usages.map(u => this.resolveUsageParser(u));
+		let usages = _usages.map(this.resolveUsageParser);
 
 		let errors = [];
 		let finalArgs = [];

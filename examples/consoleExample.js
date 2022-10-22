@@ -6,14 +6,14 @@ This example is a simple console commands handler
 
 let handler = new CommandHandler({
   prefix: '',
-  buildArguments: build => [build.args]
+  buildArguments: (build) => [build.args]
 });
 
 handler.registerCommand({
   name: 'help',
   desc: 'Shows commands',
   async run(args) {
-    handler.Commands.forEach(cmd => {
+    handler.Commands.forEach((cmd) => {
       console.log('> ' + cmd.name);
       console.log('  ' + cmd.desc);
       console.log('  Usage: ' + handler.prettyPrint(cmd));
@@ -65,7 +65,7 @@ handler.registerCommand({
 });
 
 var stdin = process.openStdin();
-stdin.addListener('data', d => {
+stdin.addListener('data', (d) => {
   let input = d.toString().trim();
   handler.run(input);
 });

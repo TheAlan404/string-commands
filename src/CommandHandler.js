@@ -96,7 +96,7 @@ class CommandHandler extends EventEmitter {
     if (!Array.isArray(cmd.checks)) cmd.checks = [];
 
     this.Commands.set(cmd.name, cmd);
-    cmd.aliases.forEach(alias => Aliases.set(alias, cmd.name));
+    cmd.aliases.forEach((alias) => Aliases.set(alias, cmd.name));
 
     this.log.info('Registered command: ' + cmd.name);
   }

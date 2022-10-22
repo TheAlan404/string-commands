@@ -50,7 +50,7 @@ import splitargs from 'splitargs';
  * @prop {any} parsed - Parsed value
  */
 
-const fail = m => ({ fail: true, message: m });
+const fail = (m) => ({ fail: true, message: m });
 
 /**
  * A collection of native/hardcoded argument parsers
@@ -122,7 +122,7 @@ const NativeUsages = Object.entries({
 
 /** @type {ArgumentHandlerStylings} */
 const defaultStylings = {
-  arg: x => x
+  arg: (x) => x
 };
 
 class ArgumentParser {

@@ -78,16 +78,17 @@ class CommandHandler extends EventEmitter {
     registerCommand(cmd = {}) {
         cmd = this.transformCommand(cmd);
         if(typeof cmd !== "object") throw new Error("registerCommand: Command must be an object");
-
-        if(!cmd.name) throw new Error("registerCommand: Command does not have a name");
-        if(!cmd.run) throw new Error("registerCommand: Command does not have a runner function");
+        else if(!cmd.name) throw new Error("registerCommand: Command does not have a name");
+        else if(!cmd.run) throw new Error("registerCommand: Command does not have a runner function");
 
         if(!Array.isArray(cmd.aliases))
             cmd.aliases = [];
+        
         if(typeof cmd.args === "string")
             cmd.args = cmd.args.split(" ");
-        if(!Array.isArray(cmd.args))
+        else if(!Array.isArray(cmd.args))
             cmd.args = [];
+        
         if(!Array.isArray(cmd.checks))
             cmd.checks = [];
 

@@ -1,0 +1,28 @@
+name: prettier
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - '**'
+    paths:
+      - '**/*.js'
+jobs:
+  test:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Installing dependencies
+        run: npm install
+      - name: Running Prettier
+        run: npx prettier **/*.js --write
+      - name: Commit
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'chore: prettier'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

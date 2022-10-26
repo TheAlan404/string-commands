@@ -1,7 +1,2 @@
-import { ArgumentParser } from "./ArgumentParser.js";
-import { CommandHandler } from "./CommandHandler.js";
-
-export {
-    ArgumentParser,
-    CommandHandler,
-};
+export { ArgumentParser } from './ArgumentParser.js';
+export { CommandHandler } from './CommandHandler.js';

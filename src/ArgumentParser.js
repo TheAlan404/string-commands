@@ -198,7 +198,7 @@ class ArgumentParser {
     usage = this.resolveUsageParser(usage);
 
     let braceOpen = usage.optional ? '[' : '<';
-    let braceClose = usage.optional ? '[' : '>';
+    let braceClose = usage.optional ? ']' : '>';
 
     let usageTypeName = usage.desc;
 

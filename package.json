@@ -36,8 +36,8 @@
   },
   "prettier": {
     "semi": true,
-    "singleQuote": true,
-    "trailingComma": "none",
+    "singleQuote": false,
+    "trailingComma": "all",
     "htmlWhitespaceSensitivity": "ignore"
   }
 }

@@ -1,73 +1,86 @@
-import { CommandHandler } from '../src/index.js';
+import { CommandHandler } from "../src/index.js";
 
 /*
 This example is a simple console commands handler
 */
 
 let handler = new CommandHandler({
-  prefix: '',
-  buildArguments: (build) => [build.args]
+  prefix: "",
+  buildArguments: (build) => [build.args],
 });
 
+handler.invalidUsageMessage = ({ command, errors }) => {
+  console.log("/!\\ Invalid Usage!");
+  console.log("Usage: " + handler.prettyPrint(command));
+  console.log(errors.map((x) => "- " + x.message).join("\n"));
+};
+
+handler.failedChecksMessage = ({ command, errors }) => {
+  console.log("(x) Error: Failed Checks:");
+  console.log(errors.map((x) => "- " + x.message).join("\n"));
+};
+
+// -- commands --
+
 handler.registerCommand({
-  name: 'help',
-  desc: 'Shows commands',
+  name: "help",
+  desc: "Shows commands",
   async run(args) {
     handler.Commands.forEach((cmd) => {
-      console.log('> ' + cmd.name);
-      console.log('  ' + cmd.desc);
-      console.log('  Usage: ' + handler.prettyPrint(cmd));
+      console.log("> " + cmd.name);
+      console.log("  " + cmd.desc);
+      console.log("  Usage: " + handler.prettyPrint(cmd));
     });
-  }
+  },
 });
 
 handler.registerCommand({
-  name: 'say',
-  desc: 'Repeats your words',
+  name: "say",
+  desc: "Repeats your words",
   args: [
     {
-      type: 'text',
-      rest: true
-    }
+      type: "text",
+      rest: true,
+    },
   ],
   async run([text]) {
     // Because rest: true, it all gets collected to the first element
     console.log(text);
-  }
+  },
 });
 
 handler.registerCommand({
-  name: 'add',
-  desc: 'Add two numbers',
+  name: "add",
+  desc: "Add two numbers",
   args: [
     {
-      type: 'number',
-      name: 'a'
+      type: "number",
+      name: "a",
     },
     {
-      type: 'number',
-      name: 'b'
-    }
+      type: "number",
+      name: "b",
+    },
   ],
   async run([a, b]) {
     let sum = a + b;
-    console.log(a + ' + ' + b + ' = ' + sum);
-  }
+    console.log(a + " + " + b + " = " + sum);
+  },
 });
 
 handler.registerCommand({
-  name: 'exit',
-  desc: 'Exit this example',
+  name: "exit",
+  desc: "Exit this example",
   async run() {
-    console.log('OK, bye!');
+    console.log("OK, bye!");
     process.exit();
-  }
+  },
 });
 
 var stdin = process.openStdin();
-stdin.addListener('data', (d) => {
+stdin.addListener("data", (d) => {
   let input = d.toString().trim();
   handler.run(input);
 });
 
-handler.run('help');
+handler.run("help");

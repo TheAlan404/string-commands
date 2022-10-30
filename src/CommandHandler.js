@@ -1,7 +1,7 @@
-import { readdirSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { EventEmitter } from 'node:events';
-import { ArgumentParser } from './ArgumentParser.js';
+import { readdirSync } from "node:fs";
+import { resolve } from "node:path";
+import { EventEmitter } from "node:events";
+import { ArgumentParser } from "./ArgumentParser.js";
 
 /**
  * @typedef {Object} Command
@@ -40,7 +40,7 @@ const noLogger = {
   log: () => {},
   info: () => {},
   debug: () => {},
-  error: () => {}
+  error: () => {},
 };
 
 class CommandHandler extends EventEmitter {
@@ -57,12 +57,12 @@ class CommandHandler extends EventEmitter {
    */
   constructor(opts = {}) {
     super();
-    this.prefix = typeof opts.prefix == 'string' ? opts.prefix : '!';
+    this.prefix = typeof opts.prefix == "string" ? opts.prefix : "!";
     this.log = opts.log === false ? noLogger : opts.log || console;
 
-    if (typeof opts.transformCommand == 'function')
+    if (typeof opts.transformCommand == "function")
       this.transformCommand = opts.transformCommand;
-    if (typeof opts.buildArguments == 'function')
+    if (typeof opts.buildArguments == "function")
       this.buildArguments = opts.buildArguments;
 
     /** @type {Map<string, Command>} */
@@ -79,18 +79,18 @@ class CommandHandler extends EventEmitter {
    */
   registerCommand(cmd = {}) {
     cmd = this.transformCommand(cmd);
-    if (typeof cmd !== 'object')
-      throw new Error('registerCommand: Command must be an object');
+    if (typeof cmd !== "object")
+      throw new Error("registerCommand: Command must be an object");
     else if (!cmd.name)
-      throw new Error('registerCommand: Command does not have a name');
+      throw new Error("registerCommand: Command does not have a name");
     else if (!cmd.run)
       throw new Error(
-        'registerCommand: Command does not have a runner function'
+        "registerCommand: Command does not have a runner function",
       );
 
     if (!Array.isArray(cmd.aliases)) cmd.aliases = [];
 
-    if (typeof cmd.args === 'string') cmd.args = cmd.args.split(' ');
+    if (typeof cmd.args === "string") cmd.args = cmd.args.split(" ");
     else if (!Array.isArray(cmd.args)) cmd.args = [];
 
     if (!Array.isArray(cmd.checks)) cmd.checks = [];
@@ -98,7 +98,7 @@ class CommandHandler extends EventEmitter {
     this.Commands.set(cmd.name, cmd);
     cmd.aliases.forEach((alias) => Aliases.set(alias, cmd.name));
 
-    this.log.info('Registered command: ' + cmd.name);
+    this.log.info("Registered command: " + cmd.name);
   }
 
   /**
@@ -106,9 +106,9 @@ class CommandHandler extends EventEmitter {
    * @param {string} [folderPath] - Defaults to "./commands"
    * @remarks The path begins at node's pwd
    */
-  async registerCommands(folderPath = './commands') {
+  async registerCommands(folderPath = "./commands") {
     let entries = readdirSync(resolve(folderPath), { withFileTypes: true });
-    this.log.info('Registering folder: ' + resolve(folderPath));
+    this.log.info("Registering folder: " + resolve(folderPath));
     for (let entry of entries) {
       let fd = resolve(dir, entry.name);
       if (entry.isDirectory()) registerCommands(fd);
@@ -168,9 +168,9 @@ class CommandHandler extends EventEmitter {
 
     // parse text
 
-    let split = input.slice(this.prefix.length).split(' ');
+    let split = input.slice(this.prefix.length).split(" ");
     let cmdName = split[0];
-    let cmdArgs = split.slice(1).join(' ');
+    let cmdArgs = split.slice(1).join(" ");
 
     // resolve
 
@@ -185,13 +185,13 @@ class CommandHandler extends EventEmitter {
     } else if (this.Aliases.has(cmdName)) {
       let alias = this.Aliases.get(cmdName);
       if (!this.Commands.has(alias))
-        throw new Error('run: Alias points to nothing');
+        throw new Error("run: Alias points to nothing");
       cmd = this.Commands.get(alias);
     } else {
-      this.emit('unknownCommand', {
+      this.emit("unknownCommand", {
         input,
         name: cmdName,
-        ctx
+        ctx,
       });
       return;
     }
@@ -200,7 +200,7 @@ class CommandHandler extends EventEmitter {
 
     let { args, errors } = await this.argumentParser.parseUsages(
       cmdArgs,
-      cmd.args
+      cmd.args,
     );
 
     if (errors.length) {
@@ -210,7 +210,7 @@ class CommandHandler extends EventEmitter {
         name: cmdName,
         command: cmd,
         getFullString: () =>
-          prefix + cmdName + ' ' + this.usagesToString(cmd.args)
+          prefix + cmdName + " " + this.usagesToString(cmd.args),
       });
       return;
     }
@@ -220,7 +220,7 @@ class CommandHandler extends EventEmitter {
     let fnArgs = this.buildArguments({
       input,
       ctx,
-      args
+      args,
     });
 
     // checks
@@ -240,7 +240,7 @@ class CommandHandler extends EventEmitter {
         input,
         name: cmdName,
         command: cmd,
-        checks: failedChecks
+        checks: failedChecks,
       });
       return;
     }
@@ -250,24 +250,24 @@ class CommandHandler extends EventEmitter {
     try {
       let fn = cmd.run.bind(cmd);
       fn(...fnArgs);
-      this.emit('commandRun', {
+      this.emit("commandRun", {
         command: cmd,
         name: cmdName,
         input,
         ctx,
         args,
-        runArgs: fnArgs
+        runArgs: fnArgs,
       });
     } catch (e) {
       console.log(e);
-      this.emit('commandError', {
+      this.emit("commandError", {
         error: e,
         command: cmd,
         name: cmdName,
         input,
         ctx,
         args,
-        runArgs: fnArgs
+        runArgs: fnArgs,
       });
     }
   }
@@ -281,8 +281,8 @@ class CommandHandler extends EventEmitter {
       this.prefix +
       cmd.name +
       (cmd.args?.length
-        ? ' ' + this.argumentParser.usagesToString(cmd.args)
-        : '')
+        ? " " + this.argumentParser.usagesToString(cmd.args)
+        : "")
     );
   }
 

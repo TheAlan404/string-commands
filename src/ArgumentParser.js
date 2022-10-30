@@ -1,4 +1,4 @@
-import splitargs from 'splitargs';
+import splitargs from "splitargs";
 
 // The Usage System
 
@@ -58,30 +58,30 @@ const fail = (m) => ({ fail: true, message: m });
  */
 const NativeUsages = Object.entries({
   text: {
-    type: 'native',
+    type: "native",
     async parse(ctx) {
       if (ctx.opts.max !== undefined && ctx.arg.length > ctx.opts.max) {
         return fail(
           `${ctx.style.arg(ctx.name)} cannot be longer than ${ctx.style.arg(
-            opts.max
-          )} characters!`
+            opts.max,
+          )} characters!`,
         );
       }
 
       if (ctx.opts.min !== undefined && ctx.arg.length <= ctx.opts.min) {
         return fail(
           `${ctx.style.arg(ctx.name)} cannot be shorter than ${ctx.style.arg(
-            ctx.opts.min
-          )} characters!`
+            ctx.opts.min,
+          )} characters!`,
         );
       }
 
       return { parsed: ctx.arg };
-    }
+    },
   },
 
   number: {
-    type: 'native',
+    type: "native",
     async parse(ctx) {
       let arg = Number(ctx.arg);
 
@@ -96,22 +96,22 @@ const NativeUsages = Object.entries({
       if (ctx.opts.max !== undefined && arg > ctx.opts.max) {
         return fail(
           `${ctx.style.arg(ctx.name)} cannot be greater than ${ctx.style.arg(
-            ctx.opts.max
-          )}!`
+            ctx.opts.max,
+          )}!`,
         );
       }
 
       if (ctx.opts.min !== undefined && arg > ctx.opts.min) {
         return fail(
           `${ctx.style.arg(ctx.name)} cannot be smaller than ${ctx.style.arg(
-            ctx.opts.min
-          )} characters!`
+            ctx.opts.min,
+          )} characters!`,
         );
       }
 
       return { parsed: arg };
-    }
-  }
+    },
+  },
 });
 
 /**
@@ -122,7 +122,7 @@ const NativeUsages = Object.entries({
 
 /** @type {ArgumentHandlerStylings} */
 const defaultStylings = {
-  arg: (x) => x
+  arg: (x) => x,
 };
 
 class ArgumentParser {
@@ -146,27 +146,27 @@ class ArgumentParser {
    * @returns {UsageParser}
    */
   resolveUsageParser(parser) {
-    if (typeof parser == 'string') {
+    if (typeof parser == "string") {
       let rest = false;
       let optional = false;
-      if (parser.endsWith('...')) {
+      if (parser.endsWith("...")) {
         rest = true;
         parser = parser.slice(0, -3);
       }
 
       let last = parser[parser.length - 1];
-      if (parser[0] == '<') {
-        if (last !== '>')
-          throw new Error('Unclosed required argument identifier');
+      if (parser[0] == "<") {
+        if (last !== ">")
+          throw new Error("Unclosed required argument identifier");
         parser = parser.slice(1).slice(0, -1);
-      } else if (parser[0] == '[') {
-        if (last !== ']')
-          throw new Error('Unclosed optional argument identifier');
+      } else if (parser[0] == "[") {
+        if (last !== "]")
+          throw new Error("Unclosed optional argument identifier");
         optional = true;
         parser = parser.slice(1).slice(0, -1);
       }
 
-      let sp = parser.split(':');
+      let sp = parser.split(":");
       let type = sp.length === 2 ? sp[1] : sp[0];
       let name = sp.length === 2 ? sp[0] : null;
       parser = this.ArgumentParsers.get(type);
@@ -186,7 +186,7 @@ class ArgumentParser {
    * @returns {string}
    */
   usagesToString(usages = []) {
-    return usages.map(this.usageToString).join(' ');
+    return usages.map(this.usageToString).join(" ");
   }
 
   /**
@@ -194,18 +194,18 @@ class ArgumentParser {
    * @param {UsageResolvable} usage Usage to turn into string
    * @returns {string}
    */
-  usageToString(usage = 'text') {
+  usageToString(usage = "text") {
     usage = this.resolveUsageParser(usage);
 
-    let braceOpen = usage.optional ? '[' : '<';
-    let braceClose = usage.optional ? ']' : '>';
+    let braceOpen = usage.optional ? "[" : "<";
+    let braceClose = usage.optional ? "]" : ">";
 
     let usageTypeName = usage.desc;
 
     return (
       braceOpen +
       usage.name +
-      (usageTypeName ? ': ' + usageTypeName : '') +
+      (usageTypeName ? ": " + usageTypeName : "") +
       braceClose
     );
   }
@@ -215,7 +215,7 @@ class ArgumentParser {
    * @param {string} text - text to parse
    * @param {UsageResolvable[]} _usages
    */
-  async parseUsages(text = '', _usages = []) {
+  async parseUsages(text = "", _usages = []) {
     let rawArgs = splitargs(text);
 
     let usages = _usages.map(this.resolveUsageParser);
@@ -231,13 +231,13 @@ class ArgumentParser {
       let currentUsage = usages[i];
 
       if (currentUsage.rest) {
-        rawArg = rawArgs.slice(i).join(' ');
+        rawArg = rawArgs.slice(i).join(" ");
       }
 
       if (!rawArg.trim() && !currentUsage.optional) {
         errors.push({
           usage: currentUsage,
-          message: `${inlineCode(currentUsage.name)} is required!`
+          message: `${inlineCode(currentUsage.name)} is required!`,
         });
         continue;
       }
@@ -246,7 +246,7 @@ class ArgumentParser {
       if (result.fail) {
         errors.push({
           usage: currentUsage,
-          message: result.message
+          message: result.message,
         });
       } else {
         finalArgs.push(result.parsed);
@@ -267,7 +267,7 @@ class ArgumentParser {
     let parsers = [];
 
     let cursor = usage;
-    while (cursor.type !== 'native') {
+    while (cursor.type !== "native") {
       // collect parser
       if (cursor.parse) parsers.push(cursor.parse);
       // populate usage
@@ -293,7 +293,7 @@ class ArgumentParser {
     if (!raw) {
       if (usage.optional) {
         return {
-          parsed: usage.default ?? null
+          parsed: usage.default ?? null,
         };
       } else {
         return fail(`${inlineCode(usage.name)} is required!`);
@@ -307,7 +307,7 @@ class ArgumentParser {
         arg: value,
         name: usage.name,
         opts: usage,
-        style: this.styling
+        style: this.styling,
       });
 
       if (result.fail) {

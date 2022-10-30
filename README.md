@@ -3,6 +3,7 @@
 The command handler and argument parser for anything.
 
 ## Features
+
 - Recursive folder importing
 - Configurable message stylings
 - Command checks (requirements)
@@ -35,21 +36,21 @@ You can pass an object of options into the CommandHandler.
 
 ```js
 let handler = new CommandHandler({
-    // inputs must also begin with prefix
-    // you can set this to an empty string
-    prefix: "!",
+  // inputs must also begin with prefix
+  // you can set this to an empty string
+  prefix: "!",
 
-    // by default, log uses console
-    // set to false to disable logging
-    log: false,
-    // or put in your own logger
-    log: myLogger,
+  // by default, log uses console
+  // set to false to disable logging
+  log: false,
+  // or put in your own logger
+  log: myLogger,
 
-    // you can also put the functions here to overwrite them,
-    // instead of overriding them after initialization
-    // note that these are still optional
-    transformCommand: () => {},
-    buildArguments: () => {},
+  // you can also put the functions here to overwrite them,
+  // instead of overriding them after initialization
+  // note that these are still optional
+  transformCommand: () => {},
+  buildArguments: () => {},
 });
 ```
 
@@ -64,10 +65,10 @@ Commands are just objects that must have two properties:
 
 ```js
 let myCommand = {
-    name: "ping",
-    run: (ctx, args) => {
-        console.log("Pong!");
-    },
+  name: "ping",
+  run: (ctx, args) => {
+    console.log("Pong!");
+  },
 };
 ```
 
@@ -76,7 +77,7 @@ let myCommand = {
 By default, the arguments of the runner functions are as follows:
 
 ```js
-run: (ctx, args) => {} 
+run: (ctx, args) => {};
 ```
 
 The arguments of the Runner Functions are defined using `CommandHandler#buildArguments`
@@ -85,8 +86,8 @@ You can change the order, remove, or add new params to the runner functions by o
 
 ```js
 handler.buildArguments = (b) => {
-    return [b.args, b.ctx.username];
-}
+  return [b.args, b.ctx.username];
+};
 
 // which would make you be able to define the runner function as:
 let run = (args, username) => {};
@@ -122,17 +123,17 @@ You can set the `CommandHandler#transformCommand` to a helper function that woul
 
 ```js
 let oldCommand = {
-    help: {
-        name: "ping"
-    },
-    execute: async () => {},
+  help: {
+    name: "ping",
+  },
+  execute: async () => {},
 };
 
 handler.transformCommand = (obj) => {
-    if(!obj.name) obj.name = obj.help.name;
-    if(!obj.run) obj.run = obj.execute;
-    return obj;
-}
+  if (!obj.name) obj.name = obj.help.name;
+  if (!obj.run) obj.run = obj.execute;
+  return obj;
+};
 ```
 
 ### Checks
@@ -146,20 +147,20 @@ Command Checks are just the same as runner functions, but they must return an ob
 
 ```js
 {
-    checks: [
-        (ctx, args) => {
-            // Im an useless check! Gonna make it run!
-            return { pass: true };
-        },
+  checks: [
+    (ctx, args) => {
+      // Im an useless check! Gonna make it run!
+      return { pass: true };
+    },
 
-        (ctx, args) => {
-            // just you wait until you hear that im after you
-            return {
-                pass: false,
-                message: "Hardcoded Failiure",
-            };
-        },
-    ]
+    (ctx, args) => {
+      // just you wait until you hear that im after you
+      return {
+        pass: false,
+        message: "Hardcoded Failiure",
+      };
+    },
+  ];
 }
 ```
 
@@ -194,22 +195,22 @@ For example, in the code below, the `rest: true` field is a parser option
 You can also put strings instead of objects, but the side effect is that you cant define other parser options.
 
 ```js
-args: ["text"]
+args: ["text"];
 
 // a ":" can be used to give it a name
-args: ["yourMessage:text"]
+args: ["yourMessage:text"];
 
 // it can also be marked optional and required
-args: ["[text]", "<text>"]
+args: ["[text]", "<text>"];
 
 // you can use three dots in the end to set `rest: true`
-args: ["text..."]
+args: ["text..."];
 
 // you can also combine it like so:
-args: ["<words:text>..."]
+args: ["<words:text>..."];
 
 // you can also also turn the whole array into a string
-args: "<user:text> <points:number> [comment:string]..."
+args: "<user:text> <points:number> [comment:string]...";
 ```
 
 #### Special Parser Options
@@ -277,9 +278,9 @@ If there were any errors etc, return an object with `fail: true` and `message` s
 return { parsed: myValue };
 
 return {
-    fail: true,
-    message: "Your argument failed the vibe check.",
-}
+  fail: true,
+  message: "Your argument failed the vibe check.",
+};
 ```
 
 Usage parsers can easily inherit other parsers using `type`. ArgumentParser automatically parses the lowest type and builds up from there. This means if you have an usage parser with type set to `"number"`, `ctx.arg` will be a number instead of a string.

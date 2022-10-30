@@ -38,6 +38,8 @@
     "semi": true,
     "singleQuote": false,
     "trailingComma": "all",
-    "htmlWhitespaceSensitivity": "ignore"
+    "htmlWhitespaceSensitivity": "ignore",
+    "useTabs": true,
+    "tabWidth": 4
   }
 }

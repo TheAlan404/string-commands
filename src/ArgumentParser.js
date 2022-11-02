@@ -28,9 +28,8 @@ import splitargs from "splitargs";
 /**
  * Parser function of UsageParser
  * @callback UsageParserCallback
- * @async
  * @param {UsageParserContext} ctx
- * @returns {UsageParserResult}
+ * @returns {Promise<UsageParserResult>}
  */
 
 /**
@@ -39,6 +38,8 @@ import splitargs from "splitargs";
  * @prop {string|any} arg - Value of the argument
  * @prop {string} name - Name of the argument
  * @prop {Object} opts
+ * @prop {function(string):UsageParserResult} fail - helper method to create a fail
+ * @prop {*} context
  * @prop {ArgumentHandlerStylings} style
  */
 
@@ -214,8 +215,9 @@ class ArgumentParser {
 	 *
 	 * @param {string} text - text to parse
 	 * @param {UsageResolvable[]} _usages
+	 * @param {*} context - Extra context to feed into the parsers
 	 */
-	async parseUsages(text = "", _usages = []) {
+	async parseUsages(text = "", _usages = [], context) {
 		let rawArgs = splitargs(text);
 
 		let usages = _usages.map(this.resolveUsageParser);
@@ -242,7 +244,7 @@ class ArgumentParser {
 				continue;
 			}
 
-			let result = await this.parseUsage(currentUsage, rawArg);
+			let result = await this.parseUsage(currentUsage, rawArg, context);
 			if (result.fail) {
 				errors.push({
 					usage: currentUsage,
@@ -260,9 +262,10 @@ class ArgumentParser {
 	 *
 	 * @param {UsageParser} usage
 	 * @param {string} raw
+	 * @param {*} context
 	 * @returns {UsageParserResult}
 	 */
-	async parseUsage(usage, raw) {
+	async parseUsage(usage, raw, context) {
 		/** @type {UsageParserCallback[]} */
 		let parsers = [];
 
@@ -308,6 +311,11 @@ class ArgumentParser {
 				name: usage.name,
 				opts: usage,
 				style: this.styling,
+				fail: (m) => ({
+					fail: true,
+					message: this.styling.arg(usage.name) + ": " + m,
+				}),
+				context,
 			});
 
 			if (result.fail) {

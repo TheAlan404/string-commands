@@ -1,6 +1,6 @@
 {
   "name": "string-commands",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The command handler for almost anything.",
   "type": "module",
   "main": "./src/index.js",
@@ -28,9 +28,6 @@
     "url": "https://github.com/TheAlan404/string-commands/issues"
   },
   "homepage": "https://github.com/TheAlan404/string-commands#readme",
-  "dependencies": {
-    "splitargs": "^0.0.7"
-  },
   "devDependencies": {
     "prettier": "^2.6.2"
   },
@@ -41,5 +38,8 @@
     "htmlWhitespaceSensitivity": "ignore",
     "useTabs": true,
     "tabWidth": 4
+  },
+  "optionalDependencies": {
+    "discord.js": "^14.6.0"
   }
 }

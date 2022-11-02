@@ -15,19 +15,14 @@ import { ArgumentParser } from "./ArgumentParser.js";
 /**
  * Execute function of Command
  * @callback CommandRun
- * @param {Message} msg
- * @param {any[]} args
- * @param {Object} ctx
+ * @param {...any} args - Runner function arguments, @see buildArguments
  */
 
 /**
  * Check callback
  * @callback CommandCheck
- * @async
- * @param {Message} msg
- * @param {any[]} args
- * @param {Object} ctx
- * @returns {CommandCheckResult}
+ * @param {...any} args - Runner function arguments, @see buildArguments
+ * @returns {Promise<CommandCheckResult>}
  */
 
 /**
@@ -43,17 +38,21 @@ const noLogger = {
 	error: () => { },
 };
 
+/**
+ * @typedef {Object} CommandHandlerOptions
+ * @prop {Object} - Options for the command handler
+ * @prop {string} prefix - Prefix of the command handler. Defaults to `"!"`
+ * @prop {Object} argumentParser - ArgumentParser options
+ * @prop {Object|false} log - The logger to use.
+ *                                - Set to `false` to disable logging.
+ *                                - Default is `console`
+ * @prop {function(Object):Command} transformCommand - @see transformCommand
+ * @prop {function(Object):any[]} buildArguments - @see buildArguments
+ */
+
 class CommandHandler extends EventEmitter {
 	/**
-	 *
-	 * @param {Object} opts - Options for the command handler
-	 * @param {string} opts.prefix - Prefix of the command handler. Defaults to `"!"`
-	 * @param {Object} opts.argumentParser - ArgumentParser options
-	 * @param {Object|false} opts.log - The logger to use.
-	 *                                - Set to `false` to disable logging.
-	 *                                - Default is `console`
-	 * @param {function(Object):Command} opts.transformCommand - @see transformCommand
-	 * @param {function(Object):any[]} opts.buildArguments - @see buildArguments
+	 * @param {CommandHandlerOptions} opts - The options of the command handler
 	 */
 	constructor(opts = {}) {
 		super();
@@ -201,6 +200,7 @@ class CommandHandler extends EventEmitter {
 		let { args, errors } = await this.argumentParser.parseUsages(
 			cmdArgs,
 			cmd.args,
+			ctx,
 		);
 
 		if (errors.length) {

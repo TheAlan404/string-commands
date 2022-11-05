@@ -95,7 +95,7 @@ class CommandHandler extends EventEmitter {
 		if (!Array.isArray(cmd.checks)) cmd.checks = [];
 
 		this.Commands.set(cmd.name, cmd);
-		cmd.aliases.forEach((alias) => Aliases.set(alias, cmd.name));
+		cmd.aliases.forEach((alias) => this.Aliases.set(alias, cmd.name));
 
 		this.log.info("Registered command: " + cmd.name);
 	}
@@ -109,11 +109,25 @@ class CommandHandler extends EventEmitter {
 		let entries = readdirSync(resolve(folderPath), { withFileTypes: true });
 		this.log.info("Registering folder: " + resolve(folderPath));
 		for (let entry of entries) {
-			let fd = resolve(dir, entry.name);
+			let fd = resolve(folderPath, entry.name);
 			if (entry.isDirectory()) registerCommands(fd);
 			else {
-				let obj = await import(fd);
-				registerCommand(obj);
+				let obj = {};
+                try {
+                    obj = await import(fd);
+                } catch (e) {
+                    try {
+                        if(e.code == "ERR_UNSUPPORTED_ESM_URL_SCHEME") {
+                            obj = await import("file://" + fd);
+                        } else {
+                            throw e;
+                        }
+                    } catch(ee) {
+                        this.log.error("Cannot register command " + fd + " because of error: " + ee.toString());
+                    }
+                }
+                if(obj && !obj.name && obj.default && obj.default.name) obj = obj.default;
+                this.registerCommand(obj);
 			}
 		}
 	}

@@ -63,7 +63,9 @@ const NativeUsages = Object.entries({
 		async parse(ctx) {
 			if (ctx.opts.max !== undefined && ctx.arg.length > ctx.opts.max) {
 				return fail(
-					`${ctx.style.arg(ctx.name)} cannot be longer than ${ctx.style.arg(
+					`${ctx.style.arg(
+						ctx.name,
+					)} cannot be longer than ${ctx.style.arg(
 						opts.max,
 					)} characters!`,
 				);
@@ -71,7 +73,9 @@ const NativeUsages = Object.entries({
 
 			if (ctx.opts.min !== undefined && ctx.arg.length <= ctx.opts.min) {
 				return fail(
-					`${ctx.style.arg(ctx.name)} cannot be shorter than ${ctx.style.arg(
+					`${ctx.style.arg(
+						ctx.name,
+					)} cannot be shorter than ${ctx.style.arg(
 						ctx.opts.min,
 					)} characters!`,
 				);
@@ -91,20 +95,24 @@ const NativeUsages = Object.entries({
 			}
 
 			if (ctx.opts.isInt && arg % 1 !== 0) {
-				return fail(`${ctx.style.arg(ctx.name)} must be a whole number!`);
+				return fail(
+					`${ctx.style.arg(ctx.name)} must be a whole number!`,
+				);
 			}
 
 			if (ctx.opts.max !== undefined && arg > ctx.opts.max) {
 				return fail(
-					`${ctx.style.arg(ctx.name)} cannot be greater than ${ctx.style.arg(
-						ctx.opts.max,
-					)}!`,
+					`${ctx.style.arg(
+						ctx.name,
+					)} cannot be greater than ${ctx.style.arg(ctx.opts.max)}!`,
 				);
 			}
 
 			if (ctx.opts.min !== undefined && arg > ctx.opts.min) {
 				return fail(
-					`${ctx.style.arg(ctx.name)} cannot be smaller than ${ctx.style.arg(
+					`${ctx.style.arg(
+						ctx.name,
+					)} cannot be smaller than ${ctx.style.arg(
 						ctx.opts.min,
 					)} characters!`,
 				);

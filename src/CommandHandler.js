@@ -32,10 +32,10 @@ import { ArgumentParser } from "./ArgumentParser.js";
  */
 
 const noLogger = {
-	log: () => { },
-	info: () => { },
-	debug: () => { },
-	error: () => { },
+	log: () => {},
+	info: () => {},
+	debug: () => {},
+	error: () => {},
 };
 
 /**
@@ -158,9 +158,9 @@ class CommandHandler extends EventEmitter {
 	 * @param {Object} context
 	 * @param {function():string} context.getFullString - gives you a nicely rendered string
 	 */
-	invalidUsageMessage({ ctx, input, name, command, getFullString }) { }
+	invalidUsageMessage({ ctx, input, name, command, getFullString }) {}
 
-	failedChecksMessage({ ctx, input, name, command, checks }) { }
+	failedChecksMessage({ ctx, input, name, command, checks }) {}
 
 	async run(input, ctx) {
 		if (!input.startsWith(this.prefix)) return;

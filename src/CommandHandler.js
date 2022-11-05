@@ -113,21 +113,27 @@ class CommandHandler extends EventEmitter {
 			if (entry.isDirectory()) registerCommands(fd);
 			else {
 				let obj = {};
-                try {
-                    obj = await import(fd);
-                } catch (e) {
-                    try {
-                        if(e.code == "ERR_UNSUPPORTED_ESM_URL_SCHEME") {
-                            obj = await import("file://" + fd);
-                        } else {
-                            throw e;
-                        }
-                    } catch(ee) {
-                        this.log.error("Cannot register command " + fd + " because of error: " + ee.toString());
-                    }
-                }
-                if(obj && !obj.name && obj.default && obj.default.name) obj = obj.default;
-                this.registerCommand(obj);
+				try {
+					obj = await import(fd);
+				} catch (e) {
+					try {
+						if (e.code == "ERR_UNSUPPORTED_ESM_URL_SCHEME") {
+							obj = await import("file://" + fd);
+						} else {
+							throw e;
+						}
+					} catch (ee) {
+						this.log.error(
+							"Cannot register command " +
+								fd +
+								" because of error: " +
+								ee.toString(),
+						);
+					}
+				}
+				if (obj && !obj.name && obj.default && obj.default.name)
+					obj = obj.default;
+				this.registerCommand(obj);
 			}
 		}
 	}

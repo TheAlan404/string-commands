@@ -1,4 +1,4 @@
-import splitargs from "splitargs";
+import splitargs from "../utils/splitargs.js";
 
 // The Usage System
 

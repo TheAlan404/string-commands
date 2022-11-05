@@ -1,4 +1,4 @@
-import { CommandHandler } from "../src";
+import { CommandHandler } from "../src/CommandHandler.js";
 import { Client, channelMention, ChannelType } from "discord.js";
 
 /**

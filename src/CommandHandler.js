@@ -33,10 +33,10 @@ import { stageify } from "./stageify.js";
  */
 
 const noLogger = {
-	log: () => { },
-	info: () => { },
-	debug: () => { },
-	error: () => { },
+	log: () => {},
+	info: () => {},
+	debug: () => {},
+	error: () => {},
 };
 
 class CommandHandler extends EventEmitter {
@@ -59,7 +59,7 @@ class CommandHandler extends EventEmitter {
 		if (opts.usages) {
 			for (let [k, v] of Object.entries(opts.usages))
 				this.registerUsage(k, v);
-		};
+		}
 	}
 
 	// alias
@@ -77,7 +77,9 @@ class CommandHandler extends EventEmitter {
 		else if (!cmd.name)
 			throw new Error("registerCommand: Command does not have a name");
 		else if (!cmd.run)
-			throw new Error("registerCommand: Command does not have a runner function");
+			throw new Error(
+				"registerCommand: Command does not have a runner function",
+			);
 
 		if (!Array.isArray(cmd.aliases)) cmd.aliases = [];
 
@@ -116,10 +118,16 @@ class CommandHandler extends EventEmitter {
 							throw e;
 						}
 					} catch (ee) {
-						this.log.error("Cannot register command " + fd + " because of error: " + ee.toString());
+						this.log.error(
+							"Cannot register command " +
+								fd +
+								" because of error: " +
+								ee.toString(),
+						);
 					}
 				}
-				if (obj && !obj.name && obj.default && obj.default.name) obj = obj.default;
+				if (obj && !obj.name && obj.default && obj.default.name)
+					obj = obj.default;
 				this.registerCommand(obj);
 			}
 		}
@@ -154,15 +162,16 @@ class CommandHandler extends EventEmitter {
 	}
 
 	use(mw) {
-		if(typeof mw === "function") {
+		if (typeof mw === "function") {
 			mw = {
 				before: "run",
 				run: mw,
 			};
-		} else if (typeof mw !== "object") throw new Error("Middleware should be an object");
+		} else if (typeof mw !== "object")
+			throw new Error("Middleware should be an object");
 
-		if(!mw.run) throw new Error("Middleware run() doesn't exist");
-		if(!mw.id) mw.id = "mw-" + this.middlewares.length;
+		if (!mw.run) throw new Error("Middleware run() doesn't exist");
+		if (!mw.id) mw.id = "mw-" + this.middlewares.length;
 
 		this.middlewares.push(mw);
 		return this;
@@ -171,14 +180,16 @@ class CommandHandler extends EventEmitter {
 	async run(input, ctx) {
 		if (!input.startsWith(this.prefix)) return;
 
-		let { execute, } = stageify([
+		let { execute } = stageify([
 			{
 				id: "splitString",
 				run: (execCtx, next) => {
-					let split = execCtx.input.slice(this.prefix.length).split(" ");
+					let split = execCtx.input
+						.slice(this.prefix.length)
+						.split(" ");
 					let cmdName = split[0].toLowerCase();
 					let cmdArgs = split.slice(1).join(" ");
-			
+
 					execCtx.name = cmdName;
 					execCtx.rawArgs = cmdArgs;
 
@@ -214,20 +225,21 @@ class CommandHandler extends EventEmitter {
 				id: "parseUsages",
 				after: "resolveCommand",
 				run: async (execCtx, next) => {
-					let { args, errors } = await this.argumentParser.parseUsages(
-						execCtx.rawArgs,
-						execCtx.command.args,
-						execCtx.ctx,
-					);
-			
+					let { args, errors } =
+						await this.argumentParser.parseUsages(
+							execCtx.rawArgs,
+							execCtx.command.args,
+							execCtx.ctx,
+						);
+
 					if (errors.length) {
 						this.emit("invalidUsage", {
 							...execCtx,
 							errors,
 						});
 						return;
-					};
-			
+					}
+
 					execCtx.args = args;
 
 					// also build args here lol
@@ -247,7 +259,7 @@ class CommandHandler extends EventEmitter {
 						if (!result.pass) {
 							failedChecks.push(result);
 						}
-					};
+					}
 
 					if (failedChecks.length) {
 						this.emit("failedChecks", {
@@ -274,7 +286,7 @@ class CommandHandler extends EventEmitter {
 							...execCtx,
 							error: e,
 						});
-					};
+					}
 
 					next();
 				},

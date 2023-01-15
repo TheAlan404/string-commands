@@ -30,7 +30,7 @@ handler.registerCommand({
 	async run(args) {
 		handler.Commands.forEach((cmd) => {
 			console.log("> " + cmd.name + " : " + cmd.desc);
-			if(cmd.args && cmd.args.length)
+			if (cmd.args && cmd.args.length)
 				console.log("  Usage: " + handler.prettyPrint(cmd));
 		});
 	},
@@ -83,7 +83,7 @@ handler.registerCommand({
 	name: "su",
 	desc: "Switch user",
 	args: ["uname:string"],
-	async run([ uname ]) {
+	async run([uname]) {
 		username = uname;
 		console.log("Welcome back, " + username + "!");
 	},
@@ -94,12 +94,12 @@ handler.registerCommand({
 	desc: "No (unless you're 'root')",
 	checks: [
 		async () => {
-			if(username == "root") {
+			if (username == "root") {
 				// Okay.
 				return { pass: true };
 			} else {
 				return { pass: false, message: "What? Make it yourself." };
-			};
+			}
 		},
 	],
 	async run() {

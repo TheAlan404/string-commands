@@ -117,7 +117,7 @@ const DiscordChecks = {
 };
 
 /**
- * @typedef {import("../src/CommandHandler").CommandHandlerOptions} DiscordCommandHandlerOptions
+ * @typedef {strcmd.CommandHandlerOptions} DiscordCommandHandlerOptions
  */
 
 class DiscordCommandHandler extends CommandHandler {

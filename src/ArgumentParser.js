@@ -3,36 +3,6 @@ import splitargs from "../utils/splitargs.js";
 // The Usage System
 
 /**
- * @typedef {string|Usage|UsageParser} UsageResolvable
- */
-
-/**
- * @typedef {UsageParser} Usage
- * @prop {string} type
- * @prop {string} name - Name of this argument
- * @prop {boolean} [optional] - True if optional
- * @prop {*} [default] - default value if optional
- */
-
-/**
- * Definition for an Argument Parser
- * @typedef {Object} UsageParser
- * @prop {string|"native"} type - used for inheritance
- * @prop {string} name - name of the argument (shouldn't be given in UsageParser definitions)
- * @prop {boolean} [optional] - True if optional by default
- * @prop {*} [default] - default-default value if optional
- * @prop {boolean} [rest] - set to true to capture the rest of the input
- * @prop {UsageParserCallback} parse - the parse function
- */
-
-/**
- * Parser function of UsageParser
- * @callback UsageParserCallback
- * @param {UsageParserContext} ctx
- * @returns {Promise<UsageParserResult>}
- */
-
-/**
  * Argument of UsageParserCallback
  * @typedef {Object} UsageParserContext
  * @prop {string|any} arg - Value of the argument
@@ -41,14 +11,6 @@ import splitargs from "../utils/splitargs.js";
  * @prop {function(string):UsageParserResult} fail - helper method to create a fail
  * @prop {*} context
  * @prop {ArgumentHandlerStylings} style
- */
-
-/**
- * Return type of UsageParserCallback
- * @typedef {Object} UsageParserResult
- * @prop {boolean} fail - True if error
- * @prop {string} message - Error message
- * @prop {any} parsed - Parsed value
  */
 
 const fail = (m) => ({ fail: true, message: m });
@@ -84,6 +46,8 @@ const NativeUsages = Object.entries({
 			return { parsed: ctx.arg };
 		},
 	},
+
+	string: { type: "text" },
 
 	number: {
 		type: "native",
@@ -180,7 +144,7 @@ class ArgumentParser {
 			let name = sp.length === 2 ? sp[0] : null;
 			parser = this.ArgumentParsers.get(type);
 			if (!parser) {
-				return;
+				throw new Error(`Can't resolve usage from string because UsageParser '${type}' doesn't exist!`);
 			}
 			if (name) parser.name = name;
 			if (rest) parser.rest = rest;
@@ -195,7 +159,7 @@ class ArgumentParser {
 	 * @returns {string}
 	 */
 	usagesToString(usages = []) {
-		return usages.map(this.usageToString).join(" ");
+		return usages.map((u) => this.usageToString(u)).join(" ");
 	}
 
 	/**
@@ -228,7 +192,7 @@ class ArgumentParser {
 	async parseUsages(text = "", _usages = [], context) {
 		let rawArgs = splitargs(text);
 
-		let usages = _usages.map(this.resolveUsageParser);
+		let usages = _usages.map(u => this.resolveUsageParser(u));
 
 		let errors = [];
 		let finalArgs = [];
@@ -303,11 +267,16 @@ class ArgumentParser {
 
 		if (!raw) {
 			if (usage.optional) {
+				let defaultValue = usage.default && (typeof usage.default == "function" ? usage.default({
+					name: usage.name,
+					opts: usage,
+					context,
+				}) : usage.default);
 				return {
-					parsed: usage.default ?? null,
+					parsed: defaultValue,
 				};
 			} else {
-				return fail(`${inlineCode(usage.name)} is required!`);
+				return fail(`${this.styling.arg(usage.name)} is required!`);
 			}
 		}
 

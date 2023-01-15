@@ -4,21 +4,23 @@ import { CommandHandler } from "../src/index.js";
 This example is a simple console commands handler
 */
 
+let username = "guest";
+
 let handler = new CommandHandler({
 	prefix: "",
 	buildArguments: (build) => [build.args],
 });
 
-handler.invalidUsageMessage = ({ command, errors }) => {
+handler.on("invalidUsage", ({ command, errors }) => {
 	console.log("/!\\ Invalid Usage!");
 	console.log("Usage: " + handler.prettyPrint(command));
 	console.log(errors.map((x) => "- " + x.message).join("\n"));
-};
+});
 
-handler.failedChecksMessage = ({ command, errors }) => {
+handler.on("failedChecks", ({ checks }) => {
 	console.log("(x) Error: Failed Checks:");
-	console.log(errors.map((x) => "- " + x.message).join("\n"));
-};
+	console.log(checks.map((x) => "- " + x.message).join("\n"));
+});
 
 // -- commands --
 
@@ -27,9 +29,9 @@ handler.registerCommand({
 	desc: "Shows commands",
 	async run(args) {
 		handler.Commands.forEach((cmd) => {
-			console.log("> " + cmd.name);
-			console.log("  " + cmd.desc);
-			console.log("  Usage: " + handler.prettyPrint(cmd));
+			console.log("> " + cmd.name + " : " + cmd.desc);
+			if(cmd.args && cmd.args.length)
+				console.log("  Usage: " + handler.prettyPrint(cmd));
 		});
 	},
 });
@@ -74,6 +76,35 @@ handler.registerCommand({
 	async run() {
 		console.log("OK, bye!");
 		process.exit();
+	},
+});
+
+handler.registerCommand({
+	name: "su",
+	desc: "Switch user",
+	args: ["uname:string"],
+	async run([ uname ]) {
+		username = uname;
+		console.log("Welcome back, " + username + "!");
+	},
+});
+
+handler.registerCommand({
+	name: "make_sandwich",
+	desc: "No (unless you're 'root')",
+	checks: [
+		async () => {
+			if(username == "root") {
+				// Okay.
+				return { pass: true };
+			} else {
+				return { pass: false, message: "What? Make it yourself." };
+			};
+		},
+	],
+	async run() {
+		console.log("Ok, heres your virtual sandwich:");
+		console.log("  🥪  ");
 	},
 });
 

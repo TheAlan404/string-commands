@@ -2,6 +2,7 @@ import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { EventEmitter } from "node:events";
 import { ArgumentParser } from "./ArgumentParser.js";
+import { stageify } from "./stageify.js";
 
 /**
  * @typedef {Object} Command
@@ -32,31 +33,16 @@ import { ArgumentParser } from "./ArgumentParser.js";
  */
 
 const noLogger = {
-	log: () => {},
-	info: () => {},
-	debug: () => {},
-	error: () => {},
+	log: () => { },
+	info: () => { },
+	debug: () => { },
+	error: () => { },
 };
 
-/**
- * @typedef {Object} CommandHandlerOptions
- * @prop {Object} - Options for the command handler
- * @prop {string} prefix - Prefix of the command handler. Defaults to `"!"`
- * @prop {Object} argumentParser - ArgumentParser options
- * @prop {Object|false} log - The logger to use.
- *                                - Set to `false` to disable logging.
- *                                - Default is `console`
- * @prop {function(Object):Command} transformCommand - @see transformCommand
- * @prop {function(Object):any[]} buildArguments - @see buildArguments
- */
-
 class CommandHandler extends EventEmitter {
-	/**
-	 * @param {CommandHandlerOptions} opts - The options of the command handler
-	 */
 	constructor(opts = {}) {
 		super();
-		this.prefix = typeof opts.prefix == "string" ? opts.prefix : "!";
+		this.prefix = typeof opts.prefix == "string" ? opts.prefix : "";
 		this.log = opts.log === false ? noLogger : opts.log || console;
 
 		if (typeof opts.transformCommand == "function")
@@ -64,13 +50,21 @@ class CommandHandler extends EventEmitter {
 		if (typeof opts.buildArguments == "function")
 			this.buildArguments = opts.buildArguments;
 
-		/** @type {Map<string, Command>} */
 		this.Commands = new Map();
-		/** @type {Map<string, string>} */
 		this.Aliases = new Map();
 
+		this.middlewares = [];
+
 		this.argumentParser = new ArgumentParser(opts.argumentParser);
+		if (opts.usages) {
+			for (let [k, v] of Object.entries(opts.usages))
+				this.registerUsage(k, v);
+		};
 	}
+
+	// alias
+	addCommand = (...args) => this.registerCommand(...args);
+	addCommands = (...args) => this.registerCommands(...args);
 
 	/**
 	 * Register a command
@@ -83,9 +77,7 @@ class CommandHandler extends EventEmitter {
 		else if (!cmd.name)
 			throw new Error("registerCommand: Command does not have a name");
 		else if (!cmd.run)
-			throw new Error(
-				"registerCommand: Command does not have a runner function",
-			);
+			throw new Error("registerCommand: Command does not have a runner function");
 
 		if (!Array.isArray(cmd.aliases)) cmd.aliases = [];
 
@@ -98,6 +90,7 @@ class CommandHandler extends EventEmitter {
 		cmd.aliases.forEach((alias) => this.Aliases.set(alias, cmd.name));
 
 		this.log.info("Registered command: " + cmd.name);
+		return this;
 	}
 
 	/**
@@ -113,23 +106,24 @@ class CommandHandler extends EventEmitter {
 			if (entry.isDirectory()) registerCommands(fd);
 			else {
 				let obj = {};
-                try {
-                    obj = await import(fd);
-                } catch (e) {
-                    try {
-                        if(e.code == "ERR_UNSUPPORTED_ESM_URL_SCHEME") {
-                            obj = await import("file://" + fd);
-                        } else {
-                            throw e;
-                        }
-                    } catch(ee) {
-                        this.log.error("Cannot register command " + fd + " because of error: " + ee.toString());
-                    }
-                }
-                if(obj && !obj.name && obj.default && obj.default.name) obj = obj.default;
-                this.registerCommand(obj);
+				try {
+					obj = await import(fd);
+				} catch (e) {
+					try {
+						if (e.code == "ERR_UNSUPPORTED_ESM_URL_SCHEME") {
+							obj = await import("file://" + fd);
+						} else {
+							throw e;
+						}
+					} catch (ee) {
+						this.log.error("Cannot register command " + fd + " because of error: " + ee.toString());
+					}
+				}
+				if (obj && !obj.name && obj.default && obj.default.name) obj = obj.default;
+				this.registerCommand(obj);
 			}
 		}
+		return this;
 	}
 
 	/**
@@ -143,14 +137,6 @@ class CommandHandler extends EventEmitter {
 	}
 
 	/**
-	 * This function returns an array that will be supplied to {@link Command#run}.
-	 * Modify this using the configuration or overwrite it yourself.
-	 * Intended for backwards compatability and ease of use.
-	 * @param {Object} context - Argument builder context
-	 * @param {any[]} context.args - The parsed arguments array from {@link ArgumentParser}
-	 * @param {Object} context.ctx - Other contextual values supplied in {@link CommandHandler#run}
-	 * @returns {any[]}
-	 *
 	 * @example
 	 * myHandler.buildArguments((build) => [build.ctx.message, build.args, build.ctx.db]);
 	 *
@@ -167,128 +153,147 @@ class CommandHandler extends EventEmitter {
 		return [ctx, args];
 	}
 
-	/**
-	 *
-	 * @param {Object} context
-	 * @param {function():string} context.getFullString - gives you a nicely rendered string
-	 */
-	invalidUsageMessage({ ctx, input, name, command, getFullString }) {}
+	use(mw) {
+		if(typeof mw === "function") {
+			mw = {
+				before: "run",
+				run: mw,
+			};
+		} else if (typeof mw !== "object") throw new Error("Middleware should be an object");
 
-	failedChecksMessage({ ctx, input, name, command, checks }) {}
+		if(!mw.run) throw new Error("Middleware run() doesn't exist");
+		if(!mw.id) mw.id = "mw-" + this.middlewares.length;
+
+		this.middlewares.push(mw);
+		return this;
+	}
 
 	async run(input, ctx) {
 		if (!input.startsWith(this.prefix)) return;
 
-		// parse text
+		let { execute, } = stageify([
+			{
+				id: "splitString",
+				run: (execCtx, next) => {
+					let split = execCtx.input.slice(this.prefix.length).split(" ");
+					let cmdName = split[0].toLowerCase();
+					let cmdArgs = split.slice(1).join(" ");
+			
+					execCtx.name = cmdName;
+					execCtx.rawArgs = cmdArgs;
 
-		let split = input.slice(this.prefix.length).split(" ");
-		let cmdName = split[0];
-		let cmdArgs = split.slice(1).join(" ");
+					if (!cmdName) return;
 
-		// resolve
+					next();
+				},
+			},
+			{
+				id: "resolveCommand",
+				after: "splitString",
+				run: (execCtx, next) => {
+					let cmd;
+					let { name } = execCtx;
 
-		if (!cmdName) return;
-		cmdName = cmdName.toLowerCase();
-		// todo replacers locales
+					if (this.Commands.has(name)) {
+						cmd = this.Commands.get(name);
+					} else if (this.Aliases.has(name)) {
+						let alias = this.Aliases.get(name);
+						if (!this.Commands.has(alias))
+							throw new Error("run: Alias points to nothing");
+						cmd = this.Commands.get(alias);
+					} else {
+						this.emit("unknownCommand", execCtx);
+						return;
+					}
 
-		let cmd;
+					execCtx.command = cmd;
+					next();
+				},
+			},
+			{
+				id: "parseUsages",
+				after: "resolveCommand",
+				run: async (execCtx, next) => {
+					let { args, errors } = await this.argumentParser.parseUsages(
+						execCtx.rawArgs,
+						execCtx.command.args,
+						execCtx.ctx,
+					);
+			
+					if (errors.length) {
+						this.emit("invalidUsage", {
+							...execCtx,
+							errors,
+						});
+						return;
+					};
+			
+					execCtx.args = args;
 
-		if (this.Commands.has(cmdName)) {
-			cmd = this.Commands.get(cmdName);
-		} else if (this.Aliases.has(cmdName)) {
-			let alias = this.Aliases.get(cmdName);
-			if (!this.Commands.has(alias))
-				throw new Error("run: Alias points to nothing");
-			cmd = this.Commands.get(alias);
-		} else {
-			this.emit("unknownCommand", {
-				input,
-				name: cmdName,
-				ctx,
-			});
-			return;
-		}
+					// also build args here lol
+					execCtx.runArgs = this.buildArguments(execCtx);
 
-		// parse args
+					next();
+				},
+			},
+			{
+				id: "checks",
+				after: "parseUsages",
+				run: async (execCtx, next) => {
+					let failedChecks = [];
+					for (let check of execCtx.command.checks) {
+						/** @type {CommandCheckResult} */
+						let result = await check(...execCtx.runArgs);
+						if (!result.pass) {
+							failedChecks.push(result);
+						}
+					};
 
-		let { args, errors } = await this.argumentParser.parseUsages(
-			cmdArgs,
-			cmd.args,
-			ctx,
-		);
+					if (failedChecks.length) {
+						this.emit("failedChecks", {
+							...execCtx,
+							checks: failedChecks,
+						});
+						return;
+					}
 
-		if (errors.length) {
-			this.invalidUsageMessage({
-				ctx,
-				input,
-				name: cmdName,
-				command: cmd,
-				getFullString: () =>
-					prefix + cmdName + " " + this.usagesToString(cmd.args),
-			});
-			return;
-		}
+					next();
+				},
+			},
+			{
+				id: "run",
+				after: "checks",
+				run: (execCtx, next) => {
+					try {
+						let fn = execCtx.command.run.bind(execCtx.command);
+						fn(...execCtx.runArgs);
+						this.emit("commandRun", execCtx);
+					} catch (e) {
+						console.log(e);
+						this.emit("commandError", {
+							...execCtx,
+							error: e,
+						});
+					};
 
-		// build arguments
+					next();
+				},
+			},
+			...this.middlewares,
+		]);
 
-		let fnArgs = this.buildArguments({
+		execute({
 			input,
 			ctx,
-			args,
 		});
 
-		// checks
-
-		let failedChecks = [];
-		for (let check of cmd.checks) {
-			/** @type {CommandCheckResult} */
-			let result = await check(...fnArgs);
-			if (!result.pass) {
-				failedChecks.push(result.message);
-			}
-		}
-
-		if (failedChecks.length) {
-			this.failedChecksMessage({
-				ctx,
-				input,
-				name: cmdName,
-				command: cmd,
-				checks: failedChecks,
-			});
-			return;
-		}
-
-		// run
-
-		try {
-			let fn = cmd.run.bind(cmd);
-			fn(...fnArgs);
-			this.emit("commandRun", {
-				command: cmd,
-				name: cmdName,
-				input,
-				ctx,
-				args,
-				runArgs: fnArgs,
-			});
-		} catch (e) {
-			console.log(e);
-			this.emit("commandError", {
-				error: e,
-				command: cmd,
-				name: cmdName,
-				input,
-				ctx,
-				args,
-				runArgs: fnArgs,
-			});
-		}
+		return this;
 	}
 
 	/**
 	 * Pretty print the usage of a command
 	 * @param {Command} cmd command
+	 * @returns {string}
 	 */
 	prettyPrint(cmd) {
 		return (
@@ -300,8 +305,12 @@ class CommandHandler extends EventEmitter {
 		);
 	}
 
+	/**
+	 * {@inheritDoc ArgumentParser#registerUsage}
+	 */
 	registerUsage(...args) {
 		this.argumentParser.registerUsage(...args);
+		return this;
 	}
 }
 

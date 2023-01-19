@@ -1,11 +1,12 @@
 {
   "name": "string-commands",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A powerful command handler and parser for all your needs. Includes checks, custom arguments, middlewares and more.",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
-    "discordjs": "./plugins/discord.js"
+    "discordjs": "./plugins/discord.js",
+    "default": "./src/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

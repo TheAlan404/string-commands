@@ -144,7 +144,9 @@ class ArgumentParser {
 			let name = sp.length === 2 ? sp[0] : null;
 			parser = this.ArgumentParsers.get(type);
 			if (!parser) {
-				throw new Error(`Can't resolve usage from string because UsageParser '${type}' doesn't exist!`);
+				throw new Error(
+					`Can't resolve usage from string because UsageParser '${type}' doesn't exist!`,
+				);
 			}
 			if (name) parser.name = name;
 			if (rest) parser.rest = rest;
@@ -192,7 +194,7 @@ class ArgumentParser {
 	async parseUsages(text = "", _usages = [], context) {
 		let rawArgs = splitargs(text);
 
-		let usages = _usages.map(u => this.resolveUsageParser(u));
+		let usages = _usages.map((u) => this.resolveUsageParser(u));
 
 		let errors = [];
 		let finalArgs = [];
@@ -267,11 +269,15 @@ class ArgumentParser {
 
 		if (!raw) {
 			if (usage.optional) {
-				let defaultValue = usage.default && (typeof usage.default == "function" ? usage.default({
-					name: usage.name,
-					opts: usage,
-					context,
-				}) : usage.default);
+				let defaultValue =
+					usage.default &&
+					(typeof usage.default == "function"
+						? usage.default({
+								name: usage.name,
+								opts: usage,
+								context,
+						  })
+						: usage.default);
 				return {
 					parsed: defaultValue,
 				};

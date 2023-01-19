@@ -1,7 +1,7 @@
 {
   "name": "string-commands",
   "version": "1.1.0",
-  "description": "The command handler for almost anything.",
+  "description": "A powerful command handler and parser for all your needs. Includes checks, custom arguments, middlewares and more.",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
@@ -15,10 +15,15 @@
     "url": "git+https://github.com/TheAlan404/string-commands.git"
   },
   "keywords": [
+    "command-handler",
+    "command-handlers",
     "command",
     "handler",
     "parser",
     "commands",
+    "string-manipulation",
+    "command-pattern",
+    "command-line-parser",
     "discord.js",
     "discord"
   ],
@@ -38,8 +43,5 @@
     "htmlWhitespaceSensitivity": "ignore",
     "useTabs": true,
     "tabWidth": 4
-  },
-  "optionalDependencies": {
-    "discord.js": "^14.6.0"
   }
 }

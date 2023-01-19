@@ -1,6 +1,6 @@
 # string-commands
 
-The all powerful command handler for anything.
+A powerful command handler and parser for all your needs. Includes checks, custom arguments, middlewares and more.
 
 ## Features
 

@@ -1,5 +1,6 @@
 import { CommandHandler } from "../src/CommandHandler.js";
 import { Client, channelMention, ChannelType } from "discord.js";
+import { Permissions } from "./permissions.js";
 
 /**
  * @type {Object<string, import("../src/ArgumentParser").UsageParser>}
@@ -159,5 +160,40 @@ class DiscordCommandHandler extends CommandHandler {
 		});
 	}
 }
+
+const DiscordPermissions = () => {
+	return [
+		DiscordPermissions.userOnly(),
+		DiscordPermissions.botOnly(),
+	];
+};
+
+DiscordPermissions.userOnly = () => {
+	return Permissions({
+		label: "user-permissions",
+		getPermissions: async (execCtx) => {
+
+		},
+		getPermissionsSource: async (execCtx) => {
+
+		},
+	});
+};
+
+DiscordPermissions.botOnly = () => {
+	return Permissions({
+		label: "bot-permissions",
+		getPermissions: async (execCtx) => {
+
+		},
+		getPermissionsSource: async (execCtx) => {
+			return execCtx.command.botpermissions || execCtx.command.botperms;
+		},
+	});
+};
+
+const GuildOnly = {
+
+};
 
 export { DiscordCommandHandler, DiscordUsages };

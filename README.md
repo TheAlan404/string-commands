@@ -51,6 +51,11 @@ See these for docs:
 
 ## Changelog
 
+**v1.2.0:**
+
+- More major changes!
+- :warning: **BREAKING:** Command checks now use `ExecutorContext`! For compatability reasons, the runner args are still being kept in the function arguments, but you need to add a dummy argument at the start. Check the docs for more info.
+
 **v1.1.0:**
 
 - :warning: **BREAKING:** In `ExecutorContext` (ctx in `failedChecksMessage(ctx)`/now `on("failedChecks", (ctx)=>{})`), the **`checks`** property is now `CommandCheckResult[]` instead of `string[]`. This allows Command Checks to supply additional information about the failed checks, such as

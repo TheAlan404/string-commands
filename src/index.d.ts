@@ -2,65 +2,31 @@
 
 import { EventEmitter } from "node:events";
 
-type ValueOfMap<M> = M extends Map<any, infer V> ? V : never
-type KeyOfMap<M> = M extends Map<infer K, any> ? K : never
-type ConvertToMap<obj> = Map<keyof obj, obj[keyof obj]>;
-type AnyFunction = (...a: any) => any;
-type ReturnTypePromise<T extends AnyFunction> = ReturnType<T> extends Promise<infer U> ? U : ReturnType<T>;
-type KeyOfAsString<T> = Extract<keyof T, string>;
-
 export as namespace stringcommands;
 export as namespace strcmd;
 
 type BaseRunnerArgs = any[];
-type BaseUsageCollection = { [type: string]: UsageParser<any, any, any, any> };
+type BaseCustomContext = {};
 
-type ResolveUsageParser<TUsages extends BaseUsageCollection, V> = V extends UsageParser<any, any, any, any> ? V :
-    V extends Usage<any, any, any> ? (V["type"] extends string ? TUsages[V["type"]] : never) :
-    V extends string ?
-    V extends `${"<" | "[" | ""}${infer NA}${"..." | ""}${">" | "]" | ""}` ?
-    NA extends `${infer N}:${infer RT}` ? TUsages[RT] : TUsages[NA]
-    : never
-    : never;
-type _getUsageParserTOutput<TUsage> = TUsage extends UsageParser<any, any, infer TOutput, any> ?
-    TOutput : (TUsage extends { parse: (...any) => { parsed: infer T } } ? T : never);
-
-type StringToUsage<V> =
-    {
-        rest: V extends `${string}...` ? true : false,
-        optional: V extends `[${string}]` ? true : false,
-        type: V extends `${"<" | "[" | ""}${infer Mid}${">" | "]" | ""}` ?
-        Mid extends `${infer Name}:${infer Type}` ?
-        Type
-        : Mid
-        : never,
-        name: V extends `${"<" | "[" | ""}${infer Name}:${infer Type}${">" | "]" | ""}` ?
-        Name
-        : "",
-    };
-
-export type Command<
-    TName extends string,
-    TAliases extends string[] | null,
+type Command<
     TRunnerArgs extends BaseRunnerArgs,
-    TUsages extends BaseUsageCollection,
 > = {
-    name: TName,
+    name: string,
     run(...args: TRunnerArgs): Promise<void> | void,
 
-    aliases?: TAliases,
-    args?: UsageResolvableList<TUsages>,
-    checks: CommandCheck<TRunnerArgs>[],
+    aliases?: string[],
+    args?: UsageResolvableList,
+    checks: CommandCheck<BasicExecutorContext, TRunnerArgs>[],
 };
 
-export type CommandCheck<TRunnerArgs> = (...args: TRunnerArgs[]) => Promise<CommandCheckResult>;
+type CommandCheck<TExecutorContext, TRunnerArgs extends BaseRunnerArgs> = (execCtx: TExecutorContext, ...args: TRunnerArgs) => Promise<CommandCheckResult>;
 
-export interface CommandCheckPass { pass: true }
-export interface CommandCheckFail { pass: false, message: string }
+interface CommandCheckPass { pass: true }
+interface CommandCheckFail { pass: false, message: string }
 
-export type CommandCheckResult = CommandCheckPass | CommandCheckFail;
+type CommandCheckResult = CommandCheckPass | CommandCheckFail;
 
-export interface CommandHandlerOptions {
+interface CommandHandlerOptions {
     prefix: string,
     log: typeof console | { log: AnyFunction, info: AnyFunction, error: AnyFunction, } | false,
 }
@@ -71,53 +37,24 @@ export interface CommandHandlerOptions {
 export class CommandHandler<
     Opts extends CommandHandlerOptions,
 
-    CustomContext,
+    CustomContext extends BaseCustomContext,
     RunnerArgs extends BaseRunnerArgs,
 
-    _commands extends {
-        [CName: string]: Command<
-            typeof CName,
-            any,
-            RunnerArgs,
-            _usages
-        >
-    },
-    _aliases extends { [CAlias in _commands[keyof _commands]["aliases"][number]as string]: keyof _commands },
-    _usages extends {
-        [P in {} as string]: UsageParser<
-            CustomContext,
-            _usages,
-            any,
-            any
-        >
-    },
-    _middlewares extends CommandHandlerMiddleware<_middlewares>[],
-
-    _execContext extends ExecutorContext<CustomContext, _commands[string], RunnerArgs, _usages>,
+    _execContext extends ExecutorContext<CustomContext, RunnerArgs>,
 > extends EventEmitter {
     constructor(opts?: Opts)
 
     prefix: Opts["prefix"] | string;
-    Commands: ConvertToMap<_commands>;
-    Aliases: ConvertToMap<_aliases>;
-    middlewares: _middlewares;
+    Commands: Map<string, Command<RunnerArgs>>;
+    Aliases: Map<string, string>;
+    middlewares: CommandHandlerMiddleware[];
 
-    argumentParser: ArgumentParser<CustomContext, _usages>;
+    argumentParser: ArgumentParser<CustomContext>;
 
-    registerCommand(cmd: Command<
-        string,
-        string[],
-        RunnerArgs,
-        _usages
-    >): this;
+    registerCommand(cmd: Command<RunnerArgs>): this;
     registerCommands(path: string): Promise<this>;
 
-    addCommand(cmd: Command<
-        string,
-        string[],
-        RunnerArgs,
-        _usages
-    >): this;
+    addCommand(cmd: Command<RunnerArgs>): this;
     addCommands(path: string): Promise<this>;
 
     on(event: "invalidUsage", handler: (ctx: _execContext) => void): this;
@@ -125,11 +62,11 @@ export class CommandHandler<
 
     buildArguments(ctx: _execContext): RunnerArgs;
 
-    use(mw: CommandHandlerMiddleware<_middlewares>): this;
+    use(mw: CommandHandlerMiddleware): this;
 
     run(input: string, ctx: CustomContext): this;
 
-    prettyPrint(cmd: _commands[string]): string;
+    prettyPrint(cmd: Command<RunnerArgs>): string;
 }
 
 /**
@@ -137,22 +74,20 @@ export class CommandHandler<
  */
 type ExecutorContext<
     CustomContext,
-    TCommand extends Command<string, string[], TRunnerArgs, TUsages>,
     TRunnerArgs extends BaseRunnerArgs,
-    TUsages extends BaseUsageCollection,
 > = {
     /** The raw input string */
     input: string,
     /** The custom context */
     ctx: CustomContext,
     /** Name of the executing command */
-    name?: TCommand["name"],
+    name?: Command<TRunnerArgs>["name"],
     /** Unparsed arguments (raw) from the input string */
     rawArgs?: string[],
     /** The command's information */
-    command?: TCommand,
+    command?: Command<TRunnerArgs>,
     /** List of usage (argument parser) errors */
-    errors?: UsageError<TUsages[string]>[],
+    errors?: UsageError[],
     /** Parsed arguments/usages */
     args?: any[], // TODO: typescript voodoo to make it relationship >:3
     /** Built runner args */
@@ -163,109 +98,78 @@ type ExecutorContext<
     error?: Error,
 };
 
+type BasicExecutorContext = ExecutorContext<any, any>;
+
 // Usage System
 
-class ArgumentParser<
-    CustomContext,
-    _usages extends BaseUsageCollection,
-> {
-    ArgumentParsers: ConvertToMap<_usages>;
+export class ArgumentParser<CustomContext> {
+    ArgumentParsers: Map<string, UsageParser<any, any>>;
 
-    parseUsages<T extends UsageResolvable<_usages>[]>(text: string,
+    parseUsages<T extends UsageResolvable[]>(text: string,
         commandUsages: T,
         ctx: CustomContext): {
-            args: { [I in keyof T]: _getUsageParserTOutput<ResolveUsageParser<_usages, T[I]>> },
-            errors: [],
+            args: any[],
+            errors: UsageParserFail[],
         };
 }
 
-export type UsageResolvableList<TUsages extends BaseUsageCollection> = UsageResolvable<TUsages>[];
+type UsageResolvableList = UsageResolvable[];
 
-export type UsageResolvable<TUsages extends BaseUsageCollection> =
-    `${`${"<" | ""}${KeyOfAsString<TUsages> | `${string}:${KeyOfAsString<TUsages>}`}${">" | ""}`
-    | `[${KeyOfAsString<TUsages> | `${string}:${KeyOfAsString<TUsages>}`}]`
-    }${"..." | ""}` | { type: KeyOfAsString<TUsages> };
+type UsageResolvable = string | { type: UsageResolvable };
 
-export interface Usage<
-    CustomContext,
-    TName extends KeyOfAsString<TUsages>,
-    TUsages extends BaseUsageCollection
-> extends UsageParser<
-    CustomContext,
-    TUsages,
-    any,
-    any
-> {
-    name: TName,
-    type: UsageResolvable<TUsages>,
-    optional?: boolean,
+interface Usage extends UsageParser<any, any> {
+    name: string,
 }
 
-export interface UsageParser<
-    CustomContext,
-    TUsages extends BaseUsageCollection,
+interface UsageParser<
+    TInput,
     TOutput,
-    TOpts,
 > {
     // The second in this union is for Usage compat.
-    type: string | { type: string },
+    type: UsageResolvable,
     parse: (ctx: UsageParserContext<
-        CustomContext,
-        ReturnTypePromise<TUsages[keyof TUsages]["parse"]>,
-        TOutput,
-        TOpts
+        TInput
     >) => Promise<UsageParserResult<TOutput>>;
     optional?: boolean,
     default?: TOutput | ((ctx: UsageParserContext<
-        CustomContext,
-        ReturnTypePromise<TUsages[keyof TUsages]["parse"]>,
-        TOutput,
-        TOpts
-    >) => TOutput),
+        TInput
+    >) => Promise<TOutput>),
     rest?: boolean,
 }
 
-export type UsageParserContext<
-    CustomContext,
+type UsageParserContext<
     TInput,
-    TOutput,
-    TOpts,
 > = {
     arg: TInput;
     name: string;
-    opts: TOpts;
-    fail(message: string): Extract<UsageParserResult<TOutput>, { fail: true }>;
-    context: CustomContext;
+    opts: {};
+    fail(message: string): UsageParserFail;
+    context: BaseCustomContext;
     style: {}; // TODO: ArgumentHandlerStylings
-}
-
-export interface UsageParserSuccess<TOutput> { fail: false, parsed: TOutput }
-export interface UsageParserFail { fail: true, message: string }
-
-export type UsageParserResult<TOutput> = UsageParserSuccess<TOutput> | UsageParserFail;
-
-export type UsageError<
-    TUsage extends UsageParser<any, any, any, any>,
-> = {
-    usage: TUsage,
-    message: UsageParserFail["message"],
 };
+
+interface UsageParserSuccess<TOutput> { fail: false, parsed: TOutput }
+interface UsageParserFail { fail: true, message: string }
+
+type UsageParserResult<TOutput> = UsageParserSuccess<TOutput> | UsageParserFail;
+
+interface UsageError extends UsageParserFail {
+    usage: UsageParser<any, any>,
+}
 
 // Middlewares
 
-export type ExecutorStage = "splitString" | "resolveCommand" | "parseUsages" | "checks" | "run";
-export type MiddlewareConstraint<
+type ExecutorStage = "splitString" | "resolveCommand" | "parseUsages" | "checks" | "run";
+type MiddlewareConstraint<
     TMiddlewares extends CommandHandlerMiddleware<TMiddlewares>[],
 > = TMiddlewares[number]["id"] | ExecutorStage;
 
-export type CommandHandlerMiddleware<
-    TMiddlewares extends CommandHandlerMiddleware<any>[],
-> = {
+export type CommandHandlerMiddleware = {
     id?: string,
     run: (ctx: ExecutorContext<any, any, any, any>, next: (() => void)) => void;
-    requires?: (TMiddlewares[number]["id"])[],
+    requires?: ExecutorStage[],
 } & ({
-    before?: MiddlewareConstraint<TMiddlewares>,
+    before?: ExecutorStage,
 } | {
-    after?: MiddlewareConstraint<TMiddlewares>,
+    after?: ExecutorStage,
 });

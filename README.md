@@ -55,6 +55,8 @@ See these for docs:
 
 - More major changes!
 - :warning: **BREAKING:** Command checks now use `ExecutorContext`! For compatability reasons, the runner args are still being kept in the function arguments, but you need to add a dummy argument at the start. Check the docs for more info.
+- :warning: **BREAKING:** `ExecutorContext` got lots of renaming:
+  - `checks` => `failedChecks`
 
 **v1.1.0:**
 

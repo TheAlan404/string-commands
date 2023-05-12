@@ -93,7 +93,7 @@ type ExecutorContext<
     /** Built runner args */
     runArgs?: TRunnerArgs,
     /** List of failed checks */
-    checks?: CommandCheckFail[],
+    failedChecks?: CommandCheckFail[],
     /** An error, if occured while executing the command */
     error?: Error,
 };

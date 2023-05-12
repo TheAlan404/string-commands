@@ -8,7 +8,7 @@ import { stageify } from "./stageify.js";
  * @typedef {Object} Command
  * @prop {string} name - Name of the command
  * @prop {string[]} [aliases] - aliases
- * @prop {import("./usages").UsageResolvable[]} [args] - Arguments
+ * @prop {import("./usages.js").UsageResolvable[]} [args] - Arguments
  * @prop {CommandRun} run
  * @prop {CommandCheck[]} checks
  */
@@ -264,7 +264,7 @@ class CommandHandler extends EventEmitter {
 					if (failedChecks.length) {
 						this.emit("failedChecks", {
 							...execCtx,
-							checks: failedChecks,
+							failedChecks,
 						});
 						return;
 					}

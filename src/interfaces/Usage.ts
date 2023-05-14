@@ -1,14 +1,24 @@
 import StringReader from "../classes/StringReader";
 import { MaybePromise } from "../types";
-import { ExecutorContextCommand } from "./ExecutorContext";
+import { ExecutorContext } from "./ExecutorContext";
 
-interface UsageContext<O> extends ExecutorContextCommand {
-    argumentName: string,
+export interface ReaderContext<O> extends ExecutorContext {
     reader: StringReader,
     options: O,
+    throw: (code: string) => never,
 }
 
-export default interface Usage<T, O> {
+export interface ValueContext<T, O> extends ReaderContext<O> {
+    value: T,
+}
+
+// ? ...?? wha
+export type ParserUsage<In, Out, O> = {
+    parse?(ctx: ValueContext<In, O>): MaybePromise<Out>,
+} & Usage<Out, O>;
+
+export interface Usage<T, O> {
     type?: string,
-    parse(ctx: UsageContext<O>): MaybePromise<T>,
+    read?(ctx: ReaderContext<O>): MaybePromise<T>,
+    parse?<TValue>(ctx: ValueContext<TValue, O>): MaybePromise<T>,
 }

@@ -5,14 +5,14 @@ import Command from "./Command";
 export type BaseExecutorContext = {
     handler: CommandHandler,
     rawInput: string,
-    input: string,
-    ctx: object,
+    //input: string,
+    //ctx: object,
     [others: string]: any;
 };
 
-export type ExecutorContextCommand = BaseExecutorContext & {
+type ExecutorContextCommand = {
     commandName: string,
     command: Command,
 };
 
-export type ExecutorContext = ExecutorContextCommand;
+export type ExecutorContext = BaseExecutorContext & Partial<ExecutorContextCommand>;

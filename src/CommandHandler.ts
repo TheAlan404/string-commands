@@ -1,45 +1,36 @@
-import { CommandHandlerOptions } from "./interfaces/CommandHandlerOptions";
-import { ExecutorContext } from "./interfaces/ExecutorContext";
-import Middleware from "./interfaces/Middleware";
+import { Command } from "./Command";
+import { BaseContext } from "./Context";
+import { Middleware } from "./Middleware";
 
-class CommandHandler {
-    middlewares: Middleware[] = [];
+export class CommandHandler<Context extends BaseContext> {
+    commands: Map<string, Command<Context>> = new Map();
+    middlewares: Middleware<Context>[] = [];
 
-    constructor(opts?: CommandHandlerOptions) {
+    constructor() {
 
     }
 
-    use(mw: Middleware | Middleware["run"] | (Middleware | Middleware["run"])[]): CommandHandler {
-        if(Array.isArray(mw)) {
-            for (const m of mw) {
-                this.use(m);
-            }
-            return this;
-        };
-
-        if(typeof mw == "function") mw = {
-            id: "anonymous " + this.middlewares.length,
-            before: "run",
-            run: mw,
-        };
-
+    use(mw: Middleware<Context>) {
         this.middlewares.push(mw);
+    }
 
-        return this;
-    };
+    add(cmd: Command<Context>) {
+        this.commands.set(cmd.name, cmd);
+    }
 
-    async run(input: string, customContext: object) {
-        let ctx: ExecutorContext = {
+    run(input: string, ctx: Context) {
+        let baseCtx: BaseContext = {
             handler: this,
-            rawInput: input,
             input,
-            ...customContext,
         };
 
+        let context: Context = {
+            ...baseCtx,
+            ...ctx,
+        };
 
+        for (let mw of this.middlewares) {
+            context = await mw.run(context);
+        }
     }
-};
-
-export {
-    CommandHandler,
-};
+}

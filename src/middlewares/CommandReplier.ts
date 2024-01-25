@@ -6,5 +6,5 @@ export interface ReplyData extends Record<string, any> {
 }
 
 export interface CommandReplierCtx<T extends ReplyData> {
-    reply: (data: T, ctx: BaseContext & CommandReplierCtx<T>) => PromiseLike<void>,
+    reply?: (data: T, ctx: BaseContext & CommandReplierCtx<T>) => PromiseLike<void>,
 }

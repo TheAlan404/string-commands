@@ -7,11 +7,14 @@ import { SplitStringCtx } from "./SplitString";
 
 export const CommandExecutor = () => ({
     id: "command-executor",
-    async run<T extends CommandResolverCtx>(ctx: T): Promise<T> {
+    async run<C extends CommandResolverCtx>(ctx: C): Promise<C> {
         let { command } = ctx;
         
-        // @ts-ignore
-        command.run(ctx, []);
+        try {
+            await command.run(ctx, []);
+        } catch(e) {
+            // TODO
+        }
 
         return ctx;
     },

@@ -10,7 +10,7 @@ export type ReplyCommandNotFound = {
 };
 
 export interface CommandResolverCtx {
-    command: Command<BaseContext & CommandResolverCtx>,
+    command: Command<any>,
 }
 
 export const CommandResolver = () => ({

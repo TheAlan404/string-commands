@@ -1,53 +1,41 @@
-# string-commands
+# string-commands v2 rewrite
 
-A powerful command handler and parser for all your needs. Includes checks, custom arguments, middlewares and more.
+String Commands is a new experimental command handler with differient ideas.
 
-## Features
+This `v2` branch is a full rewrite, in typescript.
 
-- Easy to use
-- Recursive folder importing
-- Compatability with older commands
-- Configurable messages (no defaults)
-- Command checks (requirements)
-- Middlewares
-- Argument handling with custom argument support
+## Goals
 
-## Examples
-
-For the best example please see [consoleExample.js](/examples/consoleExample.js)
-
-## Usage
-
-### Installing
-
-You can install this package using
-
-```sh
-npm i string-commands
-```
-
-And then import using
-
-```js
-import { CommandHandler } from "string-commands";
-```
-
-### Documentation
-
-See these for docs:
-
-- [Command Handler](./docs/CommandHandler.md)
-- [Commands](./docs/Commands.md)
-- [Usages](./docs/Usages.md)
-- [Middlewares](./docs/Middlewares.md)
+- Customizability
+- Extensible
+- Async by default
 
 ## TODO
 
-- [x] Complete typings
-- [x] Middleware
-- [ ] Subcommands
-- [ ] Database Middlewares
-- [ ] Permissions Middleware
+- [ ] CommandHandler
+  - [x] run
+  - [x] add
+  - [x] use
+  - [ ] addFolder
+  - [ ] remove
+  - [ ] removeFolder
+- [ ] Core middlewares
+  - [x] Split string
+  - [x] Command resolver
+    - [ ] Aliases
+  - [x] Executor
+  - [ ] Command checks
+  - [ ] Argument system
+- [ ] Adapters
+  - [ ] lowdb
+  - [ ] i18next
+  - [ ] discord.js
+- [ ] Utilities
+  - [ ] Pretty printer
+- [ ] Documentation
+  - [ ] Core middlewares
+
+
 
 ## Changelog
 

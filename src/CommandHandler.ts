@@ -1,20 +1,21 @@
 import { Command } from "./Command";
 import { BaseContext } from "./Context";
-import { Middleware } from "./Middleware";
+import { Middleware, LastMiddlewareReturnType } from "./Middleware";
+import { TypedEmitter } from "tiny-typed-emitter";
 
-type LastMiddlewareReturnType<T extends Middleware<any, any>[]> = T extends [...infer _, infer Last] ? Last extends Middleware<any, infer R> ? R : BaseContext : BaseContext;
-type InputOf<T extends Middleware<any, any>> = T extends Middleware<infer I, any> ? I : never;
-type OutputOf<T extends Middleware<any, any>> = T extends Middleware<any, infer O> ? O : never;
+export interface CommandHandlerEvents<Context> {
+    earlyReturn: (ctx: Context) => void,
+}
 
 export class CommandHandler<
     Context extends LastMiddlewareReturnType<MiddlewareTypes>,
     MiddlewareTypes extends Middleware<any, any>[] = [],
-> {
+> extends TypedEmitter<CommandHandlerEvents<Context>> {
     commands: Map<string, Command<Context>> = new Map();
     middlewares: [...MiddlewareTypes] = [] as any;
 
     constructor() {
-
+        super();
     }
 
     use<T extends Context, U extends T>(mw: Middleware<T, U>):
@@ -30,6 +31,7 @@ export class CommandHandler<
 
     add(cmd: Command<Context>) {
         this.commands.set(cmd.name, cmd);
+        return this;
     }
 
     async run(input: string) {
@@ -39,8 +41,11 @@ export class CommandHandler<
         };
 
         for (let mw of this.middlewares) {
-            context = await mw.run(context);
-            if(!context) return;
+            let next = await mw.run(context);
+            if(!next) {
+                return;
+            }
+            context = next;
         }
     }
 }

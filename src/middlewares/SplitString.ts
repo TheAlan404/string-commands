@@ -2,14 +2,14 @@ import { Command } from "../Command";
 import { BaseContext } from "../Context";
 import { Middleware, MiddlewareFactory } from "../Middleware";
 
-export interface SplitStringCtx extends BaseContext {
+export interface SplitStringCtx {
     commandName: string,
     commandArguments: string,
 }
 
-export const SplitString: MiddlewareFactory<void, BaseContext, SplitStringCtx> = () => ({
+export const SplitString= () => ({
     id: "split-string",
-    async run(ctx) {
+    async run<T extends BaseContext>(ctx: T): Promise<T & SplitStringCtx> {
         let { input } = ctx;
 
         let [commandName, ...args] = input.split(" ");

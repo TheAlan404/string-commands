@@ -6,16 +6,9 @@ import { SplitString } from "./middlewares/SplitString";
 
 let handler = new CommandHandler()
     .use(SplitString())
-    .use({
-        id: "_",
-        async run(ctx) {
-            return {
-                ...ctx,
-            }
-        },
-    })
     .use(CommandResolver())
-    .use(CommandExecutor())
+    .use(ContextStatic({ a: 1 }))
+    .use(CommandExecutor());
 
 handler.add({
     name: "owo",

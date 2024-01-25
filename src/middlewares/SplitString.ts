@@ -7,15 +7,17 @@ export interface SplitStringCtx extends BaseContext {
     commandArguments: string,
 }
 
-export const SplitString: MiddlewareFactory<{}, SplitStringCtx> = () => ({
+export const SplitString: MiddlewareFactory<void, BaseContext, SplitStringCtx> = () => ({
     id: "split-string",
-    run(ctx) {
+    async run(ctx) {
         let { input } = ctx;
 
-        let command = handler.commands.get();
+        let [commandName, ...args] = input.split(" ");
 
         return {
-            ...ctx
+            ...ctx,
+            commandName,
+            commandArguments: args.join(" "),
         };
     },
 });

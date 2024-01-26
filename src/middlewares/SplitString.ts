@@ -7,7 +7,7 @@ export interface SplitStringCtx {
     commandArguments: string,
 }
 
-export const SplitString= () => ({
+export const SplitString = () => ({
     id: "split-string",
     async run<T extends BaseContext>(ctx: T): Promise<T & SplitStringCtx> {
         let { input } = ctx;

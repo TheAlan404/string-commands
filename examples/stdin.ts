@@ -1,10 +1,11 @@
 import { createInterface } from "readline";
 import { CommandHandler } from "../src";
-import { CommandExecutor, CommandResolver, SplitString } from "../src/middlewares";
+import { CommandExecutor, CommandResolver, ContextStatic, SplitString } from "../src/middlewares";
 
 let handler = new CommandHandler()
     .use(SplitString())
     .use(CommandResolver())
+    .use(ContextStatic({ appName: "exampleApp" }))
     .use(CommandExecutor());
 
 handler.add({
@@ -33,7 +34,9 @@ const rl = createInterface({
 })
 
 rl.on("line", async (line) => {
-    await handler.run(line.trim());
+    await handler.run({
+        input: line.trim(),
+    });
     rl.prompt();
 });
 

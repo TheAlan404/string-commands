@@ -8,10 +8,10 @@ import { SplitStringCtx } from "./SplitString";
 export const CommandExecutor = () => ({
     id: "command-executor",
     async run<C extends CommandResolverCtx & BaseContext>(ctx: C): Promise<C> {
-        let { command, handler } = ctx;
+        let { targetCommand, handler } = ctx;
         
         try {
-            await command.run(ctx, []);
+            await targetCommand.run(ctx, []);
         } catch(e) {
             handler.emit("commandError", e, ctx);
             return;

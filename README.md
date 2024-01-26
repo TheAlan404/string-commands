@@ -10,6 +10,47 @@ This `v2` branch is a full rewrite, in typescript.
 - Extensible
 - Async by default
 
+## Example
+
+See tested and working examples:
+- [Console REPL](./examples/stdin.ts)
+- [discord.js with Slash Commands](./examples/discordjs-slash.ts)
+
+```js
+let handler = new CommandHandler();
+
+// Set up middlewares depending on what you need:
+
+handler
+  .use(MultiPrefix({ prefixes: ["!", ".", "/"] }))
+  .use(SplitString())
+  .use(CommandResolver())
+  .use(CommandExecutor())
+
+// You can also define your own middlewares
+
+let globalNumber = 0;
+handler.use({
+  id: "command-number",
+  run: (ctx) => ({ ..ctx, number: globalNumber++ }),
+})
+
+// Add your commands
+
+handler.add({
+  name: "hello",
+  run: ({ number }) => {
+    console.log(`Hi! This is execution #${number}, provided by the custom middleware.`);
+  }
+})
+
+// and run them
+
+handler.run({
+  input: "hello",
+})
+```
+
 ## TODO
 
 - [ ] CommandHandler
@@ -25,7 +66,9 @@ This `v2` branch is a full rewrite, in typescript.
     - [ ] Aliases
   - [x] Executor
   - [ ] Command checks
-  - [ ] Argument system
+- [ ] Argument system
+  - [ ] reader impl
+  - [ ] extensible parsers
 - [ ] Adapters
   - [ ] lowdb
   - [ ] i18next
@@ -35,30 +78,102 @@ This `v2` branch is a full rewrite, in typescript.
 - [ ] Documentation
   - [ ] Core middlewares
 
+## Concepts
 
+### Context
 
-## Changelog
+Command resolving, execution etc are all made possible using Contexts.
 
-**v1.2.0:**
+The `BaseContext` contains `{ handler, input }`
 
-- More major changes!
-- :warning: **BREAKING:** Command checks now use `ExecutorContext`! For compatability reasons, the runner args are still being kept in the function arguments, but you need to add a dummy argument at the start. Check the docs for more info.
-- :warning: **BREAKING:** `ExecutorContext` got lots of renaming:
-  - `checks` => `failedChecks`
+Every middleware gets the last context and adds/removes/modifies properties.
 
-**v1.1.0:**
+For example, the `CommandResolver` middleware requires `{ commandName, handler }` in the context and adds `{ rootCommand, targetCommand }` to the context.
 
-- :warning: **BREAKING:** In `ExecutorContext` (ctx in `failedChecksMessage(ctx)`/now `on("failedChecks", (ctx)=>{})`), the **`checks`** property is now `CommandCheckResult[]` instead of `string[]`. This allows Command Checks to supply additional information about the failed checks, such as
-  - Codes for custom error messages
-  - Additional context information (for example, you could supply the user's score or something so your failed checks handler doesnt have to fetch it from a database again, or maybe supply the needed threshold etc)
-- :warning: The `invalidUsageMessage` and `failedChecksMessage` functions have been removed. Please use the `invalidUsage` and `failedChecks` events instead.
-- Default prefix is now `""` (empty string)
+## Docs
 
-- Added [Middlewares](./docs/Middlewares.md)
-- Added `index.d.ts` declarations file that's needlessly complex (and also incomplete)
-- Added more documentation
+### Middleware: Inspect
 
-**v1.0.0:**
+**Options** `fn: (ctx: T) => void`
 
-- Created project
-- Added documentation
+Inspects the current context, useful for debugging
+
+```js
+handler
+  // Logs { handler: CommandHandler, ... }
+  .use(Inspect())
+
+  // Custom function
+  .use(Inspect((ctx) => { ... }))
+```
+
+### Middleware: Prefix
+
+`input: string` => `input: string`
+
+**Options:** `{ prefix: string }`
+
+Ignore runs where the input does not start with `prefix` and strip it when it does.
+
+```js
+handler
+  .use(Inspect()) // { input: "!help", ... }
+  .use(Prefix({ prefix: "!" }))
+  .use(Inspect()) // { input: "help", ... }
+
+handler.run({ input: "!help" })
+```
+
+### Middleware: MultiPrefix
+
+`input: string` => `input: string`
+
+**Options:** `{ prefixes: string[] }`
+
+Same as `Prefix` middleware, but supports multiple.
+
+### Middleware: SplitString
+
+**Requires:** `{ input: string }`
+
+**Outputs:** `{ commandName: string, commandArgs: string }`
+
+Splits the first word of the input to be able to pass it into a command resolver
+
+```js
+handler
+  .use(SplitString())
+  .use(Inspect()) // { commandName: "roll", commandArgs: "1d6", ... }
+
+handler.run({ input: "roll 1d6" })
+```
+
+### Middleware: ContextStatic
+
+**Options:** any object
+
+This utility middleware adds the properties given via options to the context.
+
+```js
+handler
+  .use(ContextStatic({ a: 1 }))
+  .use(Inspect()) // { a: 1, ... }
+```
+
+### Middleware: CommandExecutor
+
+**Requires:** `{ targetCommand, handler }`
+
+This middleware executes aka calls the `run` method of the command.
+
+### Middleware: CommandResolver
+
+**Requires:** `{ commandName, handler }`
+
+**Outputs:** `{ rootCommand, targetCommand }`
+
+This middleware resolves the command based on the `commandName` property.
+
+If a command is not found, the `commandNotFound` reply is invoked.
+
+`targetCommand` is usually equal to `rootCommand` unless there are subcommands, in which case the resolved subcommand is assigned to `targetCommand`.

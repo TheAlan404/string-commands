@@ -10,7 +10,8 @@ export type ReplyCommandNotFound = {
 };
 
 export interface CommandResolverCtx {
-    command: Command<any>,
+    rootCommand: Command<any>,
+    targetCommand: Command<any>,
 }
 
 export const CommandResolver = () => ({
@@ -26,11 +27,13 @@ export const CommandResolver = () => ({
             return;
         }
         
-        let command = handler.commands.get(commandName);
+        let rootCommand = handler.commands.get(commandName);
 
         return {
             ...ctx,
-            command,
+            rootCommand,
+            // TODO: resolve subcommands
+            targetCommand: rootCommand,
         };
     },
 });

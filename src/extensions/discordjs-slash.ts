@@ -35,9 +35,22 @@ export class DiscordSlashCommandHandler<
             .use({
                 id: "discord-command-resolver",
                 run: async <T extends BaseContext & InteractionCtx & DiscordClientCtx>(ctx: T): Promise<T & CommandResolverCtx> => {
+                    let cmd = ctx.handler.commands.get(ctx.interaction.commandName);
+
+                    let targetCommand = cmd;
+
+                    let subcommandGroup = ctx.interaction.options.getSubcommandGroup();
+                    let subcommand = ctx.interaction.options.getSubcommand();
+                    if(subcommandGroup) {
+                        targetCommand = cmd.subcommands[subcommandGroup].subcommands[subcommand];
+                    } else if(subcommand) {
+                        targetCommand = cmd.subcommands[subcommand];
+                    }
+
                     return {
                         ...ctx,
-                        command: ctx.handler.commands.get(ctx.interaction.commandName),
+                        rootCommand: cmd,
+                        targetCommand,
                     };
                 },
             })

@@ -92,6 +92,14 @@ For example, the `CommandResolver` middleware requires `{ commandName, handler }
 
 ## Docs
 
+### CommandHandler
+
+```js
+// Create a new Command Handler
+let handler = new CommandHandler();
+
+```
+
 ### Middleware: Inspect
 
 **Options** `fn: (ctx: T) => void`

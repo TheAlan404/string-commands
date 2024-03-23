@@ -1,4 +1,4 @@
-import { Command } from "./Command";
+import { BaseCommand } from "./Command";
 import { BaseContext } from "./Context";
 import { Middleware, LastMiddlewareReturnType } from "./Middleware";
 import { TypedEmitter } from "tiny-typed-emitter";
@@ -12,8 +12,9 @@ export interface CommandHandlerEvents<Context> {
 export class CommandHandler<
     Context extends BaseContext & LastMiddlewareReturnType<MiddlewareTypes>,
     MiddlewareTypes extends Middleware<any, any>[] = [],
+    Command extends BaseCommand<Context> = BaseCommand<Context>,
 > extends TypedEmitter<CommandHandlerEvents<Context>> {
-    commands: Map<string, Command<Context>> = new Map();
+    commands: Map<string, Command> = new Map();
     middlewares: [...MiddlewareTypes] = [] as any;
 
     constructor() {
@@ -36,7 +37,7 @@ export class CommandHandler<
         return this.middlewares.find(mw => mw.id == id);
     }
 
-    add(cmd: Command<Context>) {
+    add(cmd: Command) {
         this.commands.set(cmd.name, cmd);
         return this;
     }

@@ -1,4 +1,4 @@
-import { Command } from "../Command";
+import { BaseCommand } from "../Command";
 import { BaseContext } from "../Context";
 import { Middleware, MiddlewareFactory } from "../Middleware";
 import { CommandReplierCtx } from "./CommandReplier";

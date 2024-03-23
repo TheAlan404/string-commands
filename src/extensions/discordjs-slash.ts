@@ -1,5 +1,5 @@
 import { CacheType, ChatInputCommandInteraction, Client, Events, Interaction, REST, RESTPostAPIChatInputApplicationCommandsJSONBody, Routes, SlashCommandBuilder } from "discord.js";
-import { BaseContext, Command, CommandHandler } from "..";
+import { BaseContext, BaseCommand, CommandHandler } from "..";
 import { CommandExecutor, CommandResolverCtx, ContextStatic } from "../middlewares";
 
 export interface DiscordClientCtx {
@@ -61,7 +61,7 @@ export class DiscordSlashCommandHandler<
     }
 
     getSlashCommandData() {
-        const toData = (cmd: Command<Context>) => {
+        const toData = (cmd: BaseCommand<Context>) => {
             let builder = new SlashCommandBuilder();
             builder.setName(cmd.name);
             builder.setDescription(cmd.description || "");

@@ -1,4 +1,4 @@
-import { Command } from "../Command";
+import { BaseCommand } from "../Command";
 import { BaseContext } from "../Context";
 import { Middleware, MiddlewareFactory } from "../Middleware";
 import { CommandReplierCtx } from "./CommandReplier";
@@ -10,8 +10,8 @@ export type ReplyCommandNotFound = {
 };
 
 export interface CommandResolverCtx {
-    rootCommand: Command<any>,
-    targetCommand: Command<any>,
+    rootCommand: BaseCommand<any>,
+    targetCommand: BaseCommand<any>,
 }
 
 export const CommandResolver = () => ({

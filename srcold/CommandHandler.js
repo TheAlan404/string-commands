@@ -8,7 +8,7 @@ import { stageify } from "./stageify.js";
  * @typedef {Object} Command
  * @prop {string} name - Name of the command
  * @prop {string[]} [aliases] - aliases
- * @prop {import("./usages").UsageResolvable[]} [args] - Arguments
+ * @prop {import("./usages.js").UsageResolvable[]} [args] - Arguments
  * @prop {CommandRun} run
  * @prop {CommandCheck[]} checks
  */
@@ -105,7 +105,7 @@ class CommandHandler extends EventEmitter {
 		this.log.info("Registering folder: " + resolve(folderPath));
 		for (let entry of entries) {
 			let fd = resolve(folderPath, entry.name);
-			if (entry.isDirectory()) registerCommands(fd);
+			if (entry.isDirectory()) await this.registerCommands(fd);
 			else {
 				let obj = {};
 				try {
@@ -255,7 +255,7 @@ class CommandHandler extends EventEmitter {
 					let failedChecks = [];
 					for (let check of execCtx.command.checks) {
 						/** @type {CommandCheckResult} */
-						let result = await check(...execCtx.runArgs);
+						let result = await check(execCtx, execCtx.runArgs);
 						if (!result.pass) {
 							failedChecks.push(result);
 						}
@@ -264,7 +264,7 @@ class CommandHandler extends EventEmitter {
 					if (failedChecks.length) {
 						this.emit("failedChecks", {
 							...execCtx,
-							checks: failedChecks,
+							failedChecks,
 						});
 						return;
 					}
@@ -297,6 +297,7 @@ class CommandHandler extends EventEmitter {
 		execute({
 			input,
 			ctx,
+			handler: this,
 		});
 
 		return this;

@@ -13,7 +13,7 @@ import splitargs from "../utils/splitargs.js";
  * @prop {ArgumentHandlerStylings} style
  */
 
-const fail = (m) => ({ fail: true, message: m });
+const fail = (m, code) => ({ fail: true, message: m, code });
 
 /**
  * A collection of native/hardcoded argument parsers
@@ -30,6 +30,7 @@ const NativeUsages = Object.entries({
 					)} cannot be longer than ${ctx.style.arg(
 						opts.max,
 					)} characters!`,
+					"TOO_LONG",
 				);
 			}
 
@@ -40,6 +41,7 @@ const NativeUsages = Object.entries({
 					)} cannot be shorter than ${ctx.style.arg(
 						ctx.opts.min,
 					)} characters!`,
+					"TOO_SHORT",
 				);
 			}
 
@@ -55,12 +57,13 @@ const NativeUsages = Object.entries({
 			let arg = Number(ctx.arg);
 
 			if (isNaN(arg)) {
-				return fail(`${ctx.style.arg(ctx.name)} must be a number!`);
+				return fail(`${ctx.style.arg(ctx.name)} must be a number!`, "NAN");
 			}
 
 			if (ctx.opts.isInt && arg % 1 !== 0) {
 				return fail(
 					`${ctx.style.arg(ctx.name)} must be a whole number!`,
+					"NOT_INT",
 				);
 			}
 
@@ -69,6 +72,7 @@ const NativeUsages = Object.entries({
 					`${ctx.style.arg(
 						ctx.name,
 					)} cannot be greater than ${ctx.style.arg(ctx.opts.max)}!`,
+					"TOO_BIG",
 				);
 			}
 
@@ -79,6 +83,7 @@ const NativeUsages = Object.entries({
 					)} cannot be smaller than ${ctx.style.arg(
 						ctx.opts.min,
 					)} characters!`,
+					"TOO_SMALL",
 				);
 			}
 
@@ -210,10 +215,11 @@ class ArgumentParser {
 				rawArg = rawArgs.slice(i).join(" ");
 			}
 
-			if (!rawArg.trim() && !currentUsage.optional) {
+			if (!(rawArg || "").trim() && !currentUsage.optional) {
 				errors.push({
 					usage: currentUsage,
-					message: `${inlineCode(currentUsage.name)} is required!`,
+					message: `${(currentUsage.name)} is required!`,
+					code: "REQUIRED",
 				});
 				continue;
 			}
@@ -222,7 +228,7 @@ class ArgumentParser {
 			if (result.fail) {
 				errors.push({
 					usage: currentUsage,
-					message: result.message,
+					...result,
 				});
 			} else {
 				finalArgs.push(result.parsed);
@@ -282,7 +288,10 @@ class ArgumentParser {
 					parsed: defaultValue,
 				};
 			} else {
-				return fail(`${this.styling.arg(usage.name)} is required!`);
+				return {
+					...fail(`${this.styling.arg(usage.name)} is required!`),
+					code: "REQUIRED",
+				};
 			}
 		}
 
@@ -294,9 +303,10 @@ class ArgumentParser {
 				name: usage.name,
 				opts: usage,
 				style: this.styling,
-				fail: (m) => ({
+				fail: (m, extra = {}) => ({
 					fail: true,
 					message: this.styling.arg(usage.name) + ": " + m,
+					...extra,
 				}),
 				context,
 			});

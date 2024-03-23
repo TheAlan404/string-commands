@@ -1,48 +1,60 @@
 {
-  "name": "string-commands",
-  "version": "1.1.1",
-  "description": "A powerful command handler and parser for all your needs. Includes checks, custom arguments, middlewares and more.",
-  "type": "module",
-  "main": "./src/index.js",
-  "exports": {
-    "discordjs": "./plugins/discord.js",
-    "default": "./src/index.js"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/TheAlan404/string-commands.git"
-  },
-  "keywords": [
-    "command-handler",
-    "command-handlers",
-    "command",
-    "handler",
-    "parser",
-    "commands",
-    "string-manipulation",
-    "command-pattern",
-    "command-line-parser",
-    "discord.js",
-    "discord"
-  ],
-  "author": "alan404",
-  "license": "GPL-3.0-or-later",
-  "bugs": {
-    "url": "https://github.com/TheAlan404/string-commands/issues"
-  },
-  "homepage": "https://github.com/TheAlan404/string-commands#readme",
-  "devDependencies": {
-    "prettier": "^2.6.2"
-  },
-  "prettier": {
-    "semi": true,
-    "singleQuote": false,
-    "trailingComma": "all",
-    "htmlWhitespaceSensitivity": "ignore",
-    "useTabs": true,
-    "tabWidth": 4
-  }
+	"name": "string-commands",
+	"version": "2.0.0",
+	"description": "A new way to handle commands",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"/dist"
+	],
+	"scripts": {
+		"tsx": "tsx"
+	},
+	"homepage": "https://github.com/TheAlan404/string-commands#readme",
+	"dependencies": {
+		"tiny-typed-emitter": "^2.1.0"
+	},
+	"optionalDependencies": {
+		"discord.js": "^14.14.1",
+		"dotenv": "^16.4.1",
+		"lowdb": "^7.0.1",
+		"react-reconciler": "^0.29.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.11.6",
+		"prettier": "^2.6.2",
+		"tsx": "^4.7.0",
+		"typescript": "^5.3.3"
+	},
+	"prettier": {
+		"semi": true,
+		"singleQuote": false,
+		"trailingComma": "all",
+		"htmlWhitespaceSensitivity": "ignore",
+		"useTabs": true,
+		"tabWidth": 4
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/TheAlan404/string-commands.git"
+	},
+	"keywords": [
+		"command-handler",
+		"command-handlers",
+		"command",
+		"handler",
+		"parser",
+		"commands",
+		"string-manipulation",
+		"command-pattern",
+		"command-line-parser",
+		"discord.js",
+		"discord"
+	],
+	"author": "alan404",
+	"license": "GPL-3.0-or-later",
+	"bugs": {
+		"url": "https://github.com/TheAlan404/string-commands/issues"
+	}
 }

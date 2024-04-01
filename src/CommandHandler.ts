@@ -4,37 +4,25 @@ import { Middleware, LastMiddlewareReturnType } from "./Middleware";
 import { TypedEmitter } from "tiny-typed-emitter";
 
 export interface CommandHandlerEvents<Context> {
-    earlyReturn: (ctx: Context, id: string) => void,
     commandError: (err: Error, ctx: Context) => void,
-    middlewareError: (err: Error, ctx: Context, id: string) => void,
+    middlewareError: (err: Error, ctx: Context) => void,
 }
 
 export class CommandHandler<
-    Context extends BaseContext & LastMiddlewareReturnType<MiddlewareTypes>,
-    MiddlewareTypes extends Middleware<any, any>[] = [],
+    Context extends BaseContext = BaseContext,
     Command extends BaseCommand<Context> = BaseCommand<Context>,
 > extends TypedEmitter<CommandHandlerEvents<Context>> {
     commands: Map<string, Command> = new Map();
-    middlewares: [...MiddlewareTypes] = [] as any;
+    middlewares: Middleware<any, any>[] = [];
 
     constructor() {
         super();
     }
 
-    use<T extends Context, U extends T>(mw: Middleware<T, U>):
-        CommandHandler<
-            LastMiddlewareReturnType<[...MiddlewareTypes, Middleware<T, U>]>,
-            [...MiddlewareTypes, Middleware<T, U>]
-        > {
+    use<T extends Context>(mw: Middleware<Context, T>): CommandHandler<T, Command> {
         this.middlewares.push(mw);
-        // TODO: i have no idea what i am doing but it kinda works?
         // @ts-ignore
         return this;
-    }
-
-    getMiddleware<Id extends MiddlewareTypes[number]["id"]>(id: Id): MiddlewareTypes[number] {
-        // @ts-ignore
-        return this.middlewares.find(mw => mw.id == id);
     }
 
     add(cmd: Command) {
@@ -51,13 +39,12 @@ export class CommandHandler<
         for (let mw of this.middlewares) {
             let next;
             try {
-                next = await mw.run(context);
+                next = await mw(context);
             } catch(err) {
-                this.emit("middlewareError", err, context as Context, mw.id);
+                this.emit("middlewareError", err, context as Context);
                 return;
             }
             if(!next) {
-                this.emit("earlyReturn", context as Context, mw.id);
                 return;
             }
             context = next;

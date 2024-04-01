@@ -1,10 +1,10 @@
 import { Client } from "discord.js";
-import { DiscordSlashCommandHandler } from "../src/extensions/discordjs-slash";
+import { DiscordFramework } from "../src/extensions/discordjs-slash";
 import { config } from "dotenv";
 
 config();
 
-const handler = new DiscordSlashCommandHandler({
+let fw = new DiscordFramework({
     client: new Client({
         intents: [
             "Guilds"
@@ -12,9 +12,9 @@ const handler = new DiscordSlashCommandHandler({
     }),
 });
 
-handler.registerEvents();
+fw.registerEvents();
 
-handler.add({
+fw.slashCommands.add({
     name: "test",
     description: "tests stuff",
     run({ interaction }) {
@@ -25,8 +25,7 @@ handler.add({
     },
 })
 
-
-handler.add({
+fw.slashCommands.add({
     name: "list",
     description: "manage lists",
     subcommands: {
@@ -39,11 +38,11 @@ handler.add({
     }
 })
 
-handler.publishCommandsGuild(process.env.GUILD_ID as string);
+fw.publishSlashCommandsGuild(process.env.GUILD_ID as string);
 
-handler.client.on("ready", () => {
+fw.client.on("ready", () => {
     console.log("Bot is ready!");
 });
 
-handler.login();
+fw.login();
 

@@ -7,9 +7,6 @@ export type ReplyInvalidUsage = {
     commandName: string,
 };
 
-export const ArgumentParser = <S extends ParserStore>(usages: S) => ({
-    id: "argument-parser",
-    run: async <T extends BaseContext & CommandResolverCtx & CommandReplierCtx<ReplyInvalidUsage> & SplitStringCtx>() => {
+export const ArgumentParser = <S extends ParserStore>(usages: S) => async <T extends BaseContext & CommandResolverCtx & CommandReplierCtx<ReplyInvalidUsage> & SplitStringCtx>() => {
 
-    }
-});
+};

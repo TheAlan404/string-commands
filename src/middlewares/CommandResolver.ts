@@ -14,26 +14,23 @@ export interface CommandResolverCtx {
     targetCommand: BaseCommand<any>,
 }
 
-export const CommandResolver = () => ({
-    id: "command-resolver",
-    async run<T extends (SplitStringCtx & CommandReplierCtx<ReplyCommandNotFound> & BaseContext)>(ctx: T): Promise<T & CommandResolverCtx> {
-        let { handler, commandName, reply } = ctx;
+export const CommandResolver = () => (async <T extends (SplitStringCtx & CommandReplierCtx<ReplyCommandNotFound> & BaseContext)>(ctx: T): Promise<T & CommandResolverCtx> => {
+    let { handler, commandName, reply } = ctx;
 
-        if(!handler.commands.has(commandName)) {
-            reply?.({
-                type: "commandNotFound",
-                commandName,
-            }, ctx);
-            return;
-        }
-        
-        let rootCommand = handler.commands.get(commandName);
+    if (!handler.commands.has(commandName)) {
+        reply?.({
+            type: "commandNotFound",
+            commandName,
+        }, ctx);
+        return;
+    }
 
-        return {
-            ...ctx,
-            rootCommand,
-            // TODO: resolve subcommands
-            targetCommand: rootCommand,
-        };
-    },
+    let rootCommand = handler.commands.get(commandName);
+
+    return {
+        ...ctx,
+        rootCommand,
+        // TODO: resolve subcommands
+        targetCommand: rootCommand,
+    };
 });

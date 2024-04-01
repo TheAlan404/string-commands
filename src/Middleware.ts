@@ -1,9 +1,7 @@
 import { BaseContext } from "./Context";
+import { MaybePromise } from "./utils";
 
-export interface Middleware<T extends BaseContext, U extends T> {
-    id: string,
-    run: (ctx: T) => Promise<U> | U,
-}
+export type Middleware<T extends BaseContext, U extends T> = (ctx: T) => MaybePromise<U> | MaybePromise<undefined>;
 
 export type MiddlewareLike<T extends BaseContext, U extends T> =
     Middleware<T, U>

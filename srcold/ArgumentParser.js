@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream:srcold/ArgumentParser.js
 import splitargs from "../utils/splitargs.js";
+=======
+import splitargs from '../utils/splitargs.js';
+>>>>>>> Stashed changes:src/ArgumentParser.js
 
 // The Usage System
 
@@ -47,6 +51,11 @@ const NativeUsages = Object.entries({
 
 			return { parsed: ctx.arg };
 		},
+<<<<<<< Updated upstream:srcold/ArgumentParser.js
+=======
+
+		_hideType: true,
+>>>>>>> Stashed changes:src/ArgumentParser.js
 	},
 
 	string: { type: "text" },
@@ -90,7 +99,33 @@ const NativeUsages = Object.entries({
 			return { parsed: arg };
 		},
 	},
+<<<<<<< Updated upstream:srcold/ArgumentParser.js
 });
+=======
+
+	bool: {
+		type: "native",
+		async parse(ctx) {
+			let arg = ctx.arg.toLowerCase();
+			if(["0", "false", "f"].includes(arg)) {
+				return { parsed: false };
+			} else if(["1", "true", "t"].includes(arg)) {
+				return { parsed: true };
+			} else {
+				if(ctx.opts.acceptNull) {
+					if(ctx.opts.acceptNull == "strict") {
+						return fail(`${ctx.style.arg(ctx.name)} must be a boolean! (true, false or null)`);
+					} else {
+						return { parsed: null };
+					};
+				} else {
+					return fail(`${ctx.style.arg(ctx.name)} must be a boolean! (true or false)`);
+				};
+			};
+		},
+	},
+};
+>>>>>>> Stashed changes:src/ArgumentParser.js
 
 /**
  * The stylings object for ArgumentHandler.
@@ -110,12 +145,21 @@ class ArgumentParser {
 	}
 
 	/**
-	 * Registers an usage
+	 * Registers a usage parser
 	 * @param {string} id Usage Name
 	 * @param {UsageParser} usage The usage to register
 	 */
 	registerUsage(id, usage) {
 		this.ArgumentParsers.set(id, usage);
+	}
+
+	/**
+	 * Registers multiple usage parsers at once
+	 * @param {Object<string, UsageParser>} obj
+	 */
+	 registerUsages(obj) {
+		for(let [k, v] of Object.entries(obj))
+			this.registerUsage(k, v);
 	}
 
 	/**
@@ -144,7 +188,7 @@ class ArgumentParser {
 				parser = parser.slice(1).slice(0, -1);
 			}
 
-			let sp = parser.split(":");
+			let sp = parser.split(":").map(s => s.trim());
 			let type = sp.length === 2 ? sp[1] : sp[0];
 			let name = sp.length === 2 ? sp[0] : null;
 			parser = this.ArgumentParsers.get(type);
@@ -180,14 +224,19 @@ class ArgumentParser {
 		let braceOpen = usage.optional ? "[" : "<";
 		let braceClose = usage.optional ? "]" : ">";
 
-		let usageTypeName = usage.desc;
+		let usageTypeName = usage.type;
+		let typeStr = usage._hideType ? "" : (": " + usageTypeName);
 
+<<<<<<< Updated upstream:srcold/ArgumentParser.js
 		return (
 			braceOpen +
 			usage.name +
 			(usageTypeName ? ": " + usageTypeName : "") +
 			braceClose
 		);
+=======
+		return braceOpen + usage.name + typeStr + braceClose;
+>>>>>>> Stashed changes:src/ArgumentParser.js
 	}
 
 	/**
@@ -207,8 +256,13 @@ class ArgumentParser {
 		// iterates over usages and parses them
 		// adds to errors if it fails
 		// adds to finalArgs if succeeds
+<<<<<<< Updated upstream:srcold/ArgumentParser.js
 		for (let i = 0; i < usages.length; i++) {
 			let rawArg = rawArgs[i];
+=======
+		for(let i = 0; i < usages.length; i++) {
+			let rawArg = rawArgs[i] || "";
+>>>>>>> Stashed changes:src/ArgumentParser.js
 			let currentUsage = usages[i];
 
 			if (currentUsage.rest) {
@@ -218,8 +272,12 @@ class ArgumentParser {
 			if (!(rawArg || "").trim() && !currentUsage.optional) {
 				errors.push({
 					usage: currentUsage,
+<<<<<<< Updated upstream:srcold/ArgumentParser.js
 					message: `${(currentUsage.name)} is required!`,
 					code: "REQUIRED",
+=======
+					message: `${this.styling.arg(currentUsage.name)} is required!`,
+>>>>>>> Stashed changes:src/ArgumentParser.js
 				});
 				continue;
 			}

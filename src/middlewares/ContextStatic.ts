@@ -1,9 +1,10 @@
-import { BaseContext } from "../Context";
-import { MiddlewareFactory } from "../Middleware";
+import { CombineObjects, PlainObject } from "simplytyped";
+import { Middleware } from "../Middleware";
 
 export const ContextStatic = <
-    T extends Record<string, any>,
->(obj: T) => (async <B extends BaseContext>(ctx: B): Promise<B & T> => ({
+    T extends PlainObject,
+    Input extends object,
+>(obj: T): Middleware<Input, CombineObjects<Input, T>> => ((ctx) => ({
     ...ctx,
     ...obj,
 }));

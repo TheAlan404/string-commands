@@ -1,4 +1,4 @@
-import { BaseContext } from "../Context";
+import { BaseContext } from "../../_/Context";
 
 export const Prefix = ({
     prefix = "!",

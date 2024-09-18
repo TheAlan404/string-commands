@@ -1,6 +1,6 @@
 import { ButtonInteraction, CacheType, ChatInputCommandInteraction, Client, Events, Interaction, MessageComponentInteraction, MessageContextMenuCommandInteraction, ModalSubmitInteraction, REST, RESTPostAPIChatInputApplicationCommandsJSONBody, Routes, SlashCommandBuilder, UserContextMenuCommandInteraction } from "discord.js";
 import { BaseContext, BaseCommand, CommandHandler, Middleware } from "..";
-import { CommandExecutor, CommandResolverCtx, ContextStatic } from "../middlewares";
+import { CommandExecutor, CommandResolverCtx, ContextStatic } from "../builtin/middlewares";
 import { TypedEmitter } from "tiny-typed-emitter";
 
 export interface DiscordClientCtx {

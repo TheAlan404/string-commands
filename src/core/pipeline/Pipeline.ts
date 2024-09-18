@@ -1,5 +1,5 @@
-import { AnyMiddleware, Middleware, MiddlewareList, NOOPMiddleware } from "./Middleware";
-import { Enum, variant } from "@alan404/enum";
+import { Enum } from "@alan404/enum";
+import { AnyMiddleware, Middleware, MiddlewareList } from "../middleware";
 
 type ArrayLast<T> = T extends [...infer _, infer Last] ? Last : never;
 type ArrayFirst<T> = T extends [infer First, ...infer _] ? First : never;
@@ -7,9 +7,10 @@ type ArraySliceFirst<T> = T extends [infer _, ...infer Tail] ? Tail : never;
 
 export type Pipeline<Types extends any[]> = {
     middlwares: MiddlewareList<ArrayFirst<Types>, ArraySliceFirst<Types>>;
-    pipe: <Next extends ArrayLast<Types>>(mw: Middleware<ArrayLast<Types>, Next>) =>
+    pipe: <Next>(mw: Middleware<ArrayLast<Types>, Next>) =>
         Pipeline<[...Types, Next]>;
-    execute: (initial: ArrayFirst<Types>) => Promise<ArrayLast<Types>>;
+    execute: (initial: ArrayFirst<Types>) => Promise<ExecutionResult<ArrayLast<Types>>>;
+    fire: (initial: ArrayFirst<Types>) => Pipeline<Types>;
 }
 
 export type ExecutionResult<T> = Enum<{
@@ -25,7 +26,7 @@ export type ExecutionResult<T> = Enum<{
 
 export const createPipeline = <
     Input,
-    Output extends Input
+    Output extends Input = Input,
 >(mw: Middleware<Input, Output>): Pipeline<[Input, Output]> => {
     let pipeline = {
         middlwares: [mw],
@@ -64,17 +65,11 @@ export const createPipeline = <
                 data: ctx,
             } as ExecutionResult<any>);
         },
+        fire: (initial: Input) => {
+            pipeline.execute(initial);
+            return pipeline;
+        },
     }
 
     return pipeline as Pipeline<[Input, Output]>;
 };
-
-
-
-
-
-
-
-
-
-

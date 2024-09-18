@@ -1,5 +1,5 @@
 import { Low } from "lowdb";
-import { BaseContext } from "../Context";
+import { BaseContext } from "../_/Context";
 
 export interface LowDBCtx<T> {
     db: Low<T>,

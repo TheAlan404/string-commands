@@ -1,6 +1,6 @@
-import { BaseCommand } from "../Command";
-import { BaseContext } from "../Context";
-import { Middleware, MiddlewareFactory } from "../Middleware";
+import { BaseCommand } from "../../../_/Command";
+import { BaseContext } from "../../_/Context";
+import { Middleware, MiddlewareFactory } from "../../../core/middleware/Middleware";
 
 export interface SplitStringCtx {
     commandName: string,

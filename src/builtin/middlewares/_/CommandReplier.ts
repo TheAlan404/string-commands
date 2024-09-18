@@ -1,5 +1,5 @@
-import { BaseContext } from "../Context";
-import { MiddlewareFactory } from "../Middleware";
+import { BaseContext } from "../../_/Context";
+import { MiddlewareFactory } from "../../../core/middleware/Middleware";
 
 export interface ReplyData extends Record<string, any> {
     type: string,

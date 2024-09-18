@@ -1,14 +1,16 @@
-import { PlainObject } from "simplytyped";
-import { ContextStatic, Inspect } from "./middlewares";
-import { createPipeline } from "./Pipeline";
-import { Middleware } from "./Middleware";
+import { Inspect } from "./builtin/middlewares";
+import { createPipeline } from "./core";
+
+let piper = createPipeline<number>(x => x * 2)
+    .pipe(x => x + 1)
+    .pipe(x => x.toString())
+    .pipe(x => `Output: ${x}`)
+    .pipe(Inspect());
 
 
-createPipeline(() => ({ a: 1 }))
-    .pipe(ctx => ({ ...ctx, b: 2 }))
-    .pipe(ContextStatic({ k: 1 }))
-    .pipe((ctx) => ctx)
-    .pipe(Inspect((ctx) => { ctx }))
-    .execute
-    
+Promise.all([
+    piper.execute(2),
+    piper.execute(3),
+]).then(r => console.log(r));
+
 
